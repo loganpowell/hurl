@@ -21014,7 +21014,37 @@ var objectKeys = Object.keys || function (obj) {
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
-},{"./decode":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/decode.js","./encode":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/encode.js"}],"parse-href.js":[function(require,module,exports) {
+},{"./decode":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/decode.js","./encode":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/encode.js"}],"node_modules/node-fetch/browser.js":[function(require,module,exports) {
+
+"use strict"; // ref: https://github.com/tc39/proposal-global
+
+var getGlobal = function () {
+  // the only reliable means to get the global object is
+  // `Function('return this')()`
+  // However, this causes CSP violations in Chrome apps.
+  if (typeof self !== 'undefined') {
+    return self;
+  }
+
+  if (typeof window !== 'undefined') {
+    return window;
+  }
+
+  if (typeof global !== 'undefined') {
+    return global;
+  }
+
+  throw new Error('unable to locate global object');
+};
+
+var global = getGlobal();
+module.exports = exports = global.fetch; // Needed for TypeScript and Webpack.
+
+exports.default = global.fetch.bind(global);
+exports.Headers = global.Headers;
+exports.Request = global.Request;
+exports.Response = global.Response;
+},{}],"parse-href.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -21024,39 +21054,56 @@ exports.parse_href = void 0;
 
 var _querystring = _interopRequireDefault(require("querystring"));
 
+var _nodeFetch = _interopRequireDefault(require("node-fetch"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-let hrefs = ["https://api.census.gov/data.html", "https://api.census.gov/data/2017/acs/acs1?query=some%20text", "https://census.gov/developers/apis#getting-started", "https://census.gov/developers/apis/?slash=true", "https://www.census.gov/developers/apis/?slash=true#focus", "https://www.census.gov/developers/apis/#focus?slash=true", "https://www.census.gov/developers/apis#focus?slash=false", "http://www.example.com/path/to/resource?query=text&search=find+me#focus-heading"];
-const log = console.log;
+let hrefs = ["https://api.census.gov/data.html", "https://api.census.gov/data/2017/acs/acs1?query=some%20text", "https://census.gov/developers/apis#getting-started", "https://census.gov/developers/apis/?slash=true", "https://www.census.gov/developers/apis/?slash=true#focus", "https://www.census.gov/developers/apis/#focus?slash=true", "https://www.census.gov/developers/apis#focus?slash=false", "http://www.example.com/path/to/resource?query=text&search=find+me#focus-heading", "http://api.localhost:1234/todos/2"];
 
 const parse_href = href => {
-  let parts = href.split(/(?=\?)|(?=#)/g);
-  let path_str = parts[0];
-  let query_str = parts.filter(part => part.slice(0, 1) === "?")[0] || "";
-  let hash_str = parts.filter(part => part.slice(0, 1) === "#")[0] || "";
-  let full_path = path_str.split("/").filter(x => x !== "");
-  let domain = full_path[1].split(".");
-  let path = full_path.slice(2);
+  const parts = href.split(/(?=\?)|(?=#)/g);
+  const path_str = parts[0];
+  const query_str = parts.filter(part => part.slice(0, 1) === "?")[0] || "";
 
-  let query = _querystring.default.parse(query_str.slice(1));
+  const query = _querystring.default.parse(query_str.slice(1));
 
-  let hash = hash_str.slice(1);
+  const hash_str = parts.filter(part => part.slice(0, 1) === "#")[0] || "";
+  const hash = hash_str.slice(1);
+  const full_path = path_str.split("/").filter(x => x !== "");
+  const domain = full_path[1].split(".").slice(-2);
+  const sub_domain = full_path[1].split(".").slice(0, -2);
+  const path = full_path.slice(2);
   return {
+    sub_domain,
+    domain,
     path,
     query,
-    hash,
-    domain
+    hash
   };
 };
 
 exports.parse_href = parse_href;
+console.time("start");
 let all = hrefs.map(x => parse_href(x)); //?
 
 let test = all.slice(-1)[0];
+console.timeEnd("start");
 
 _querystring.default.encode(test.query).replace("%20", "+"); //?
-},{"querystring":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/index.js"}],"hurl.js":[function(require,module,exports) {
+
+
+(0, _nodeFetch.default)("http://api.example.localhost:1234/users/2", {
+  headers: {
+    "Content-Type": "application/json"
+  }
+}).then(r => r.text()); //?
+},{"querystring":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/index.js","node-fetch":"node_modules/node-fetch/browser.js"}],"hurl.js":[function(require,module,exports) {
 "use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.dispatch_w_config = void 0;
 
 var _associative = require("@thi.ng/associative");
 
@@ -21118,47 +21165,43 @@ log("JS Loaded!"); // log("routing once")
 //  FRIVOLOUS
 // exports two things, a route_stream and a route function that can push events to the route_stream
 
-let preloadForPage = async (query, path, b) => {
-  let base = "https://jsonplaceholder.typicode.com/";
-  let data = b ? await fetch(`${base}${path}/${b}`).then(r => r.json()) : await fetch(`${base}${path}/`).then(r => r.json());
-  let el = document.createElement("pre");
-  el.innerText = JSON.stringify(data, null, 2);
-  return el;
+const getSomeJSON = async (query, path, b) => {
+  const base = "https://jsonplaceholder.typicode.com/";
+  const data = b ? await fetch(`${base}${path}/${b}`).then(r => r.json()) : await fetch(`${base}${path}/`).then(r => r.json());
+  return data;
 };
 
-const pushHistory = (...args) => (log(args), history.pushState(...args)); // dispatch should take config data and then be "activated"
+const pushToWindowHistory = (...args) => (log("pushed:", args), history.pushState(...args)); // dispatch should take config data and then be "activated"
 
 
-let config = config => async href => {
-  let route_obj = (0, _parseHref.parse_href)(href); // log(route_obj)
-
-  let {
+const dispatch_w_config = async h => {
+  const ph = _parseHref.parse_href;
+  const route_obj = ph(h);
+  log(route_obj);
+  const {
+    sub_domain,
     domain,
-    hash,
-    path,
-    query
-  } = route_obj;
-  let [a, b, c, d] = path;
-  let el = (await new _associative.EquivMap([[{ ...(0, _parseHref.parse_href)(href),
-    path: ["todos"]
-  }, preloadForPage(query, "todos", null)], [{ ...(0, _parseHref.parse_href)(href),
-    path: ["todos", b]
-  }, preloadForPage(query, "todos", b)], [{ ...(0, _parseHref.parse_href)(href),
-    path: ["users"]
-  }, preloadForPage(query, "users", null)], [{ ...(0, _parseHref.parse_href)(href),
-    path: ["users", b]
-  }, preloadForPage(query, "users", b)]]).get(route_obj)) || "404"; // this would be an hdom + spec -> page
-  // log(el)
+    path: [a, b, c, d],
+    query,
+    hash
+  } = route_obj; // prettier-ignore
 
-  if (el !== "404") document.body.appendChild(el); // pushHistory({}, null, href) // <- 🐛
-}; // let router_config = new EquivMap([
-//   [["users"], { preload: "https://jsonplaceholder.typicode.com/users", then: "" }],
-//   [
-//     ["users", "?"],
-//     [{ preload: "https://jsonplaceholder.typicode.com/users", with: "?" }, { then: "" }]
-//   ]
-// ])
-//
+  const data = (await new _associative.EquivMap([[{ ...ph(h),
+    path: ["todos"]
+  }, getSomeJSON(query, "todos", null)], [{ ...ph(h),
+    path: ["todos", b]
+  }, getSomeJSON(query, "todos", b)], [{ ...ph(h),
+    path: ["users"]
+  }, getSomeJSON(query, "users", null)], [{ ...ph(h),
+    path: ["users", b]
+  }, getSomeJSON(query, "users", b)]]).get(route_obj)) || null; // this is used by importing dispatch_w_config into the server config.
+
+  if (sub_domain[0] === "api") return data; // this would be an hdom + spec -> page
+
+  const el = document.createElement("code");
+  el.innerText = JSON.stringify(data, null, 2);
+  if (el !== "404") document.body.appendChild(el);
+}; //
 //                                                 d8
 //   e88~~8e  Y88b  /  888-~88e   e88~-_  888-~\ _d88__  d88~\
 //  d888  88b  Y88b/   888  888b d888   i 888     888   C888
@@ -21170,32 +21213,37 @@ let config = config => async href => {
 // navigation bar
 
 
-const route_stream = (0, _rstream.fromDOMEvent)(window, "popstate", "route-stream");
-const load_stream = (0, _rstream.fromDOMEvent)(window, "load", "load-stream");
+exports.dispatch_w_config = dispatch_w_config;
+const route_stream_DOM = (0, _rstream.fromDOMEvent)(window, "popstate", "route-stream");
+const load_stream_DOM = (0, _rstream.fromDOMEvent)(window, "load", "load-stream"); // addEventListener("load", e =>
+//   pushToWindowHistory(parse_href(e.target.location.href), null, e.target.location.href))
+
 const nav_stream_DOM = (0, _rstream.merge)({
-  src: [route_stream, load_stream]
+  src: [route_stream_DOM, load_stream_DOM]
 }); // link clicking
 
-let href_handler = e => {
+const href_handler = e => {
   e.preventDefault();
+  log(e);
 
   if (window.location.href === e.target.href) {
     return;
   }
 
-  route_stream.next({
+  route_stream_DOM.next({
     target: {
       location: e.target
     }
   });
-  pushHistory({}, null, e.target.href);
+  pushToWindowHistory((0, _parseHref.parse_href)(e.target.href), null, e.target.href);
 }; // just an example use
 
 
 document.querySelectorAll("a").forEach(a => a.addEventListener("click", href_handler));
-let dispatch = config();
+const start = console.time;
+const end = console.timeEnd;
 nav_stream_DOM.subscribe( // trace("route"),
-xf.map(x => dispatch(x.target.location.href)));
+xf.map(x => (start("dispatch"), dispatch_w_config(x.target.location.href), end("dispatch"))));
 /* TBD/TOD:
 - nav_stream_SRV
 - memoization/caching strategy

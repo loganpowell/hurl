@@ -57,44 +57,43 @@ log("JS Loaded!")
 
 // exports two things, a route_stream and a route function that can push events to the route_stream
 
-let preloadForPage = async (query, path, b) => {
-  let base = "https://jsonplaceholder.typicode.com/"
-  let data = b
+const getSomeJSON = async (query, path, b) => {
+  const base = "https://jsonplaceholder.typicode.com/"
+  const data = b
     ? await fetch(`${base}${path}/${b}`).then(r => r.json())
     : await fetch(`${base}${path}/`).then(r => r.json())
-  let el = document.createElement("pre")
-  el.innerText = JSON.stringify(data, null, 2)
-  return el
+  return data
 }
 
-const pushHistory = (...args) => (log(args), history.pushState(...args))
+const pushToWindowHistory = (...args) => (log("pushed:", args), history.pushState(...args))
 
 // dispatch should take config data and then be "activated"
-let config = config => async href => {
-  let route_obj = parse_href(href)
-  // log(route_obj)
-  let { domain, hash, path, query } = route_obj
-  let [a, b, c, d] = path
-  let el =
-    (await new EquivMap([
-      [{ ...parse_href(href), path: ["todos"] }, preloadForPage(query, "todos", null)],
-      [{ ...parse_href(href), path: ["todos", b] }, preloadForPage(query, "todos", b)],
-      [{ ...parse_href(href), path: ["users"] }, preloadForPage(query, "users", null)],
-      [{ ...parse_href(href), path: ["users", b] }, preloadForPage(query, "users", b)]
-    ]).get(route_obj)) || "404"
-  // this would be an hdom + spec -> page
-  // log(el)
-  if (el !== "404") document.body.appendChild(el)
-  // pushHistory({}, null, href) // <- 🐛
-}
+export const dispatch_w_config = async h => {
+  const ph = parse_href
+  const route_obj = ph(h)
+  log(route_obj)
+  const {
+    sub_domain,
+    domain,
+    path: [a, b, c, d],
+    query,
+    hash
+  } = route_obj
+  // prettier-ignore
+  const data = await new EquivMap([
+      [{ ...ph(h), path: ["todos"] },    getSomeJSON(query, "todos", null)],
+      [{ ...ph(h), path: ["todos", b] }, getSomeJSON(query, "todos", b)],
+      [{ ...ph(h), path: ["users"] },    getSomeJSON(query, "users", null)],
+      [{ ...ph(h), path: ["users", b] }, getSomeJSON(query, "users", b)]
+    ]).get(route_obj) || null
 
-// let router_config = new EquivMap([
-//   [["users"], { preload: "https://jsonplaceholder.typicode.com/users", then: "" }],
-//   [
-//     ["users", "?"],
-//     [{ preload: "https://jsonplaceholder.typicode.com/users", with: "?" }, { then: "" }]
-//   ]
-// ])
+  // this is used by importing dispatch_w_config into the server config.
+  if (sub_domain[0] === "api") return data
+  // this would be an hdom + spec -> page
+  const el = document.createElement("code")
+  el.innerText = JSON.stringify(data, null, 2)
+  if (el !== "404") document.body.appendChild(el)
+}
 
 //
 //                                                 d8
@@ -107,33 +106,38 @@ let config = config => async href => {
 //
 
 // navigation bar
-const route_stream = fromDOMEvent(window, "popstate", "route-stream")
-const load_stream = fromDOMEvent(window, "load", "load-stream")
+const route_stream_DOM = fromDOMEvent(window, "popstate", "route-stream")
+const load_stream_DOM = fromDOMEvent(window, "load", "load-stream")
 
-const nav_stream_DOM = merge({ src: [route_stream, load_stream] })
+// addEventListener("load", e =>
+//   pushToWindowHistory(parse_href(e.target.location.href), null, e.target.location.href))
+
+const nav_stream_DOM = merge({ src: [route_stream_DOM, load_stream_DOM] })
 
 // link clicking
-let href_handler = e => {
+const href_handler = e => {
   e.preventDefault()
+  log(e)
   if (window.location.href === e.target.href) {
     return
   }
 
-  route_stream.next({
+  route_stream_DOM.next({
     target: {
       location: e.target
     }
   })
-  pushHistory({}, null, e.target.href)
+  pushToWindowHistory(parse_href(e.target.href), null, e.target.href)
 }
 
 // just an example use
 document.querySelectorAll("a").forEach(a => a.addEventListener("click", href_handler))
 
-let dispatch = config()
+const start = console.time
+const end = console.timeEnd
 nav_stream_DOM.subscribe(
   // trace("route"),
-  xf.map(x => dispatch(x.target.location.href))
+  xf.map(x => (start("dispatch"), dispatch_w_config(x.target.location.href), end("dispatch")))
 )
 
 /* TBD/TOD:
