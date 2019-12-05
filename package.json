@@ -1,0 +1,24 @@
+{
+  "name": "hurl",
+  "version": "1.0.0",
+  "description": "- uses pattern matching for routing\r - agnostic to where the user enters the app\r - deeplinks are supported via \"intelligent hydration\"\r - Not coupled to rendering/view, it's \"just data\" (mostly)",
+  "main": "test.js",
+  "dependencies": {
+    "@thi.ng/associative": "^3.1.1",
+    "@thi.ng/rstream": "^3.0.0",
+    "querystring": "^0.2.0",
+    "universal-router": "^8.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.7.2",
+    "node-fetch": "^2.6.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "browserslist": [
+    "last 2 Chrome versions"
+  ]
+}
