@@ -67,12 +67,10 @@ let preloadForPage = async (query, path, b) => {
   return el
 }
 
-const route = (...args) => history.pushState(...args)
+const pushHistory = (...args) => (log(args), history.pushState(...args))
 
 // dispatch should take config data and then be "activated"
-let config = config => async x => {
-  log(x)
-  let href = x.target.location.href
+let config = config => async href => {
   let route_obj = parse_href(href)
   // log(route_obj)
   let { domain, hash, path, query } = route_obj
@@ -87,16 +85,17 @@ let config = config => async x => {
   // this would be an hdom + spec -> page
   // log(el)
   if (el !== "404") document.body.appendChild(el)
-  route({}, null, href)
+  // pushHistory({}, null, href) // <- 🐛
 }
 
-let router_config = new EquivMap([
-  [["users"], { preload: "https://jsonplaceholder.typicode.com/users", then: "" }],
-  [
-    ["users", "?"],
-    [{ preload: "https://jsonplaceholder.typicode.com/users", with: "?" }, { then: "" }]
-  ]
-])
+// let router_config = new EquivMap([
+//   [["users"], { preload: "https://jsonplaceholder.typicode.com/users", then: "" }],
+//   [
+//     ["users", "?"],
+//     [{ preload: "https://jsonplaceholder.typicode.com/users", with: "?" }, { then: "" }]
+//   ]
+// ])
+
 //
 //                                                 d8
 //   e88~~8e  Y88b  /  888-~88e   e88~-_  888-~\ _d88__  d88~\
@@ -107,22 +106,25 @@ let router_config = new EquivMap([
 //                     888
 //
 
+// navigation bar
 const route_stream = fromDOMEvent(window, "popstate", "route-stream")
 const load_stream = fromDOMEvent(window, "load", "load-stream")
 
 const nav_stream_DOM = merge({ src: [route_stream, load_stream] })
 
+// link clicking
 let href_handler = e => {
   e.preventDefault()
   if (window.location.href === e.target.href) {
     return
   }
 
-  load_stream.next({
+  route_stream.next({
     target: {
       location: e.target
     }
   })
+  pushHistory({}, null, e.target.href)
 }
 
 // just an example use
@@ -131,7 +133,7 @@ document.querySelectorAll("a").forEach(a => a.addEventListener("click", href_han
 let dispatch = config()
 nav_stream_DOM.subscribe(
   // trace("route"),
-  xf.map(x => dispatch(x))
+  xf.map(x => dispatch(x.target.location.href))
 )
 
 /* TBD/TOD:

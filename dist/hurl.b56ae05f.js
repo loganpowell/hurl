@@ -21126,12 +21126,10 @@ let preloadForPage = async (query, path, b) => {
   return el;
 };
 
-const route = (...args) => history.pushState(...args); // dispatch should take config data and then be "activated"
+const pushHistory = (...args) => (log(args), history.pushState(...args)); // dispatch should take config data and then be "activated"
 
 
-let config = config => async x => {
-  log(x);
-  let href = x.target.location.href;
+let config = config => async href => {
   let route_obj = (0, _parseHref.parse_href)(href); // log(route_obj)
 
   let {
@@ -21152,19 +21150,15 @@ let config = config => async x => {
   }, preloadForPage(query, "users", b)]]).get(route_obj)) || "404"; // this would be an hdom + spec -> page
   // log(el)
 
-  if (el !== "404") document.body.appendChild(el);
-  route({}, null, href);
-};
-
-let router_config = new _associative.EquivMap([[["users"], {
-  preload: "https://jsonplaceholder.typicode.com/users",
-  then: ""
-}], [["users", "?"], [{
-  preload: "https://jsonplaceholder.typicode.com/users",
-  with: "?"
-}, {
-  then: ""
-}]]]); //
+  if (el !== "404") document.body.appendChild(el); // pushHistory({}, null, href) // <- 🐛
+}; // let router_config = new EquivMap([
+//   [["users"], { preload: "https://jsonplaceholder.typicode.com/users", then: "" }],
+//   [
+//     ["users", "?"],
+//     [{ preload: "https://jsonplaceholder.typicode.com/users", with: "?" }, { then: "" }]
+//   ]
+// ])
+//
 //                                                 d8
 //   e88~~8e  Y88b  /  888-~88e   e88~-_  888-~\ _d88__  d88~\
 //  d888  88b  Y88b/   888  888b d888   i 888     888   C888
@@ -21173,12 +21167,14 @@ let router_config = new _associative.EquivMap([[["users"], {
 //   "88___/   /  Y88b 888-_88"   "88_-~  888     "88_/ \_88P
 //                     888
 //
+// navigation bar
+
 
 const route_stream = (0, _rstream.fromDOMEvent)(window, "popstate", "route-stream");
 const load_stream = (0, _rstream.fromDOMEvent)(window, "load", "load-stream");
 const nav_stream_DOM = (0, _rstream.merge)({
   src: [route_stream, load_stream]
-});
+}); // link clicking
 
 let href_handler = e => {
   e.preventDefault();
@@ -21187,18 +21183,19 @@ let href_handler = e => {
     return;
   }
 
-  load_stream.next({
+  route_stream.next({
     target: {
       location: e.target
     }
   });
+  pushHistory({}, null, e.target.href);
 }; // just an example use
 
 
 document.querySelectorAll("a").forEach(a => a.addEventListener("click", href_handler));
 let dispatch = config();
 nav_stream_DOM.subscribe( // trace("route"),
-xf.map(x => dispatch(x)));
+xf.map(x => dispatch(x.target.location.href)));
 /* TBD/TOD:
 - nav_stream_SRV
 - memoization/caching strategy
@@ -21234,7 +21231,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58239" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62612" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
