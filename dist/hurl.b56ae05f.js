@@ -1089,185 +1089,58 @@ Object.keys(_iwatch).forEach(function (key) {
     }
   });
 });
-},{"./api":"node_modules/@thi.ng/api/api.js","./api/event":"node_modules/@thi.ng/api/api/event.js","./api/fn":"node_modules/@thi.ng/api/api/fn.js","./api/logger":"node_modules/@thi.ng/api/api/logger.js","./api/typedarray":"node_modules/@thi.ng/api/api/typedarray.js","./assert":"node_modules/@thi.ng/api/assert.js","./logger":"node_modules/@thi.ng/api/logger.js","./mixin":"node_modules/@thi.ng/api/mixin.js","./decorators/configurable":"node_modules/@thi.ng/api/decorators/configurable.js","./decorators/deprecated":"node_modules/@thi.ng/api/decorators/deprecated.js","./decorators/nomixin":"node_modules/@thi.ng/api/decorators/nomixin.js","./decorators/sealed":"node_modules/@thi.ng/api/decorators/sealed.js","./mixins/ienable":"node_modules/@thi.ng/api/mixins/ienable.js","./mixins/inotify":"node_modules/@thi.ng/api/mixins/inotify.js","./mixins/iterable":"node_modules/@thi.ng/api/mixins/iterable.js","./mixins/iwatch":"node_modules/@thi.ng/api/mixins/iwatch.js"}],"node_modules/@thi.ng/equiv/index.js":[function(require,module,exports) {
+},{"./api":"node_modules/@thi.ng/api/api.js","./api/event":"node_modules/@thi.ng/api/api/event.js","./api/fn":"node_modules/@thi.ng/api/api/fn.js","./api/logger":"node_modules/@thi.ng/api/api/logger.js","./api/typedarray":"node_modules/@thi.ng/api/api/typedarray.js","./assert":"node_modules/@thi.ng/api/assert.js","./logger":"node_modules/@thi.ng/api/logger.js","./mixin":"node_modules/@thi.ng/api/mixin.js","./decorators/configurable":"node_modules/@thi.ng/api/decorators/configurable.js","./decorators/deprecated":"node_modules/@thi.ng/api/decorators/deprecated.js","./decorators/nomixin":"node_modules/@thi.ng/api/decorators/nomixin.js","./decorators/sealed":"node_modules/@thi.ng/api/decorators/sealed.js","./mixins/ienable":"node_modules/@thi.ng/api/mixins/ienable.js","./mixins/inotify":"node_modules/@thi.ng/api/mixins/inotify.js","./mixins/iterable":"node_modules/@thi.ng/api/mixins/iterable.js","./mixins/iwatch":"node_modules/@thi.ng/api/mixins/iwatch.js"}],"node_modules/@thi.ng/rstream/api.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.equivObject = exports.equivMap = exports.equivSet = exports.equivArrayLike = exports.equiv = void 0;
-const OBJP = Object.getPrototypeOf({});
-const FN = "function";
-const STR = "string";
+exports.setLogger = exports.LOGGER = exports.CloseMode = exports.State = void 0;
 
-const equiv = (a, b) => {
-  let proto;
+var _api = require("@thi.ng/api");
 
-  if (a === b) {
-    return true;
-  }
+var State;
+exports.State = State;
 
-  if (a != null) {
-    if (typeof a.equiv === FN) {
-      return a.equiv(b);
-    }
-  } else {
-    return a == b;
-  }
-
-  if (b != null) {
-    if (typeof b.equiv === FN) {
-      return b.equiv(a);
-    }
-  } else {
-    return a == b;
-  }
-
-  if (typeof a === STR || typeof b === STR) {
-    return false;
-  }
-
-  if ((proto = Object.getPrototypeOf(a), proto == null || proto === OBJP) && (proto = Object.getPrototypeOf(b), proto == null || proto === OBJP)) {
-    return equivObject(a, b);
-  }
-
-  if (typeof a !== FN && a.length !== undefined && typeof b !== FN && b.length !== undefined) {
-    return equivArrayLike(a, b);
-  }
-
-  if (a instanceof Set && b instanceof Set) {
-    return equivSet(a, b);
-  }
-
-  if (a instanceof Map && b instanceof Map) {
-    return equivMap(a, b);
-  }
-
-  if (a instanceof Date && b instanceof Date) {
-    return a.getTime() === b.getTime();
-  }
-
-  if (a instanceof RegExp && b instanceof RegExp) {
-    return a.toString() === b.toString();
-  } // NaN
+(function (State) {
+  State[State["IDLE"] = 0] = "IDLE";
+  State[State["ACTIVE"] = 1] = "ACTIVE";
+  State[State["DONE"] = 2] = "DONE";
+  State[State["ERROR"] = 3] = "ERROR";
+  State[State["DISABLED"] = 4] = "DISABLED"; // TODO currently unused
+})(State || (exports.State = State = {}));
+/**
+ * Closing behaviors.
+ */
 
 
-  return a !== a && b !== b;
-};
+var CloseMode;
+exports.CloseMode = CloseMode;
 
-exports.equiv = equiv;
+(function (CloseMode) {
+  /**
+   * Never close, even if no more inputs/outputs.
+   */
+  CloseMode[CloseMode["NEVER"] = 0] = "NEVER";
+  /**
+   * Close when first input/output is done / removed.
+   */
 
-const equivArrayLike = (a, b, _equiv = equiv) => {
-  let l = a.length;
+  CloseMode[CloseMode["FIRST"] = 1] = "FIRST";
+  /**
+   * Close when last input/output is done / removed.
+   */
 
-  if (l === b.length) {
-    while (--l >= 0 && _equiv(a[l], b[l]));
-  }
+  CloseMode[CloseMode["LAST"] = 2] = "LAST";
+})(CloseMode || (exports.CloseMode = CloseMode = {}));
 
-  return l < 0;
-};
+let LOGGER = _api.NULL_LOGGER;
+exports.LOGGER = LOGGER;
 
-exports.equivArrayLike = equivArrayLike;
+const setLogger = logger => exports.LOGGER = LOGGER = logger;
 
-const equivSet = (a, b, _equiv = equiv) => a.size === b.size && _equiv([...a.keys()].sort(), [...b.keys()].sort());
-
-exports.equivSet = equivSet;
-
-const equivMap = (a, b, _equiv = equiv) => a.size === b.size && _equiv([...a].sort(), [...b].sort());
-
-exports.equivMap = equivMap;
-
-const equivObject = (a, b, _equiv = equiv) => {
-  if (Object.keys(a).length !== Object.keys(b).length) {
-    return false;
-  }
-
-  for (let k in a) {
-    if (!b.hasOwnProperty(k) || !_equiv(a[k], b[k])) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-exports.equivObject = equivObject;
-},{}],"node_modules/@thi.ng/associative/dissoc.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.dissoc = dissoc;
-exports.dissocObj = void 0;
-
-function dissoc(coll, keys) {
-  for (let k of keys) {
-    coll.delete(k);
-  }
-
-  return coll;
-}
-
-const dissocObj = (obj, keys) => {
-  for (let k of keys) {
-    delete obj[k];
-  }
-
-  return obj;
-};
-
-exports.dissocObj = dissocObj;
-},{}],"node_modules/@thi.ng/associative/internal/equiv.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.equivSet = exports.equivMap = void 0;
-
-var _equiv = require("@thi.ng/equiv");
-
-const equivMap = (a, b) => {
-  if (a === b) {
-    return true;
-  }
-
-  if (!(b instanceof Map) || a.size !== b.size) {
-    return false;
-  }
-
-  for (let p of a.entries()) {
-    if (!(0, _equiv.equiv)(b.get(p[0]), p[1])) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-exports.equivMap = equivMap;
-
-const equivSet = (a, b) => {
-  if (a === b) {
-    return true;
-  }
-
-  if (!(b instanceof Set) || a.size !== b.size) {
-    return false;
-  }
-
-  for (let k of a.keys()) {
-    if (!b.has(k)) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-exports.equivSet = equivSet;
-},{"@thi.ng/equiv":"node_modules/@thi.ng/equiv/index.js"}],"node_modules/@thi.ng/checks/exists-not-null.js":[function(require,module,exports) {
+exports.setLogger = setLogger;
+},{"@thi.ng/api":"node_modules/@thi.ng/api/index.js"}],"node_modules/@thi.ng/checks/exists-not-null.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2584,254 +2457,7 @@ Object.keys(_isZero).forEach(function (key) {
     }
   });
 });
-},{"./exists-not-null":"node_modules/@thi.ng/checks/exists-not-null.js","./exists":"node_modules/@thi.ng/checks/exists.js","./has-crypto":"node_modules/@thi.ng/checks/has-crypto.js","./has-max-length":"node_modules/@thi.ng/checks/has-max-length.js","./has-min-length":"node_modules/@thi.ng/checks/has-min-length.js","./has-performance":"node_modules/@thi.ng/checks/has-performance.js","./has-wasm":"node_modules/@thi.ng/checks/has-wasm.js","./has-webgl":"node_modules/@thi.ng/checks/has-webgl.js","./has-websocket":"node_modules/@thi.ng/checks/has-websocket.js","./implements-function":"node_modules/@thi.ng/checks/implements-function.js","./is-array":"node_modules/@thi.ng/checks/is-array.js","./is-arraylike":"node_modules/@thi.ng/checks/is-arraylike.js","./is-blob":"node_modules/@thi.ng/checks/is-blob.js","./is-boolean":"node_modules/@thi.ng/checks/is-boolean.js","./is-chrome":"node_modules/@thi.ng/checks/is-chrome.js","./is-date":"node_modules/@thi.ng/checks/is-date.js","./is-even":"node_modules/@thi.ng/checks/is-even.js","./is-false":"node_modules/@thi.ng/checks/is-false.js","./is-file":"node_modules/@thi.ng/checks/is-file.js","./is-firefox":"node_modules/@thi.ng/checks/is-firefox.js","./is-function":"node_modules/@thi.ng/checks/is-function.js","./is-hex-color":"node_modules/@thi.ng/checks/is-hex-color.js","./is-ie":"node_modules/@thi.ng/checks/is-ie.js","./is-in-range":"node_modules/@thi.ng/checks/is-in-range.js","./is-int32":"node_modules/@thi.ng/checks/is-int32.js","./is-iterable":"node_modules/@thi.ng/checks/is-iterable.js","./is-map":"node_modules/@thi.ng/checks/is-map.js","./is-mobile":"node_modules/@thi.ng/checks/is-mobile.js","./is-nan":"node_modules/@thi.ng/checks/is-nan.js","./is-negative":"node_modules/@thi.ng/checks/is-negative.js","./is-nil":"node_modules/@thi.ng/checks/is-nil.js","./is-node":"node_modules/@thi.ng/checks/is-node.js","./is-not-string-iterable":"node_modules/@thi.ng/checks/is-not-string-iterable.js","./is-null":"node_modules/@thi.ng/checks/is-null.js","./is-number":"node_modules/@thi.ng/checks/is-number.js","./is-object":"node_modules/@thi.ng/checks/is-object.js","./is-odd":"node_modules/@thi.ng/checks/is-odd.js","./is-plain-object":"node_modules/@thi.ng/checks/is-plain-object.js","./is-positive":"node_modules/@thi.ng/checks/is-positive.js","./is-primitive":"node_modules/@thi.ng/checks/is-primitive.js","./is-promise":"node_modules/@thi.ng/checks/is-promise.js","./is-promiselike":"node_modules/@thi.ng/checks/is-promiselike.js","./is-regexp":"node_modules/@thi.ng/checks/is-regexp.js","./is-safari":"node_modules/@thi.ng/checks/is-safari.js","./is-set":"node_modules/@thi.ng/checks/is-set.js","./is-string":"node_modules/@thi.ng/checks/is-string.js","./is-symbol":"node_modules/@thi.ng/checks/is-symbol.js","./is-transferable":"node_modules/@thi.ng/checks/is-transferable.js","./is-true":"node_modules/@thi.ng/checks/is-true.js","./is-typedarray":"node_modules/@thi.ng/checks/is-typedarray.js","./is-uint32":"node_modules/@thi.ng/checks/is-uint32.js","./is-undefined":"node_modules/@thi.ng/checks/is-undefined.js","./is-uuid":"node_modules/@thi.ng/checks/is-uuid.js","./is-uuid4":"node_modules/@thi.ng/checks/is-uuid4.js","./is-zero":"node_modules/@thi.ng/checks/is-zero.js"}],"node_modules/@thi.ng/associative/into.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.into = into;
-
-var _checks = require("@thi.ng/checks");
-
-function into(dest, src) {
-  if ((0, _checks.isMap)(dest)) {
-    for (let x of src) {
-      dest.set(x[0], x[1]);
-    }
-  } else {
-    for (let x of src) {
-      dest.add(x);
-    }
-  }
-
-  return dest;
-}
-},{"@thi.ng/checks":"node_modules/@thi.ng/checks/index.js"}],"node_modules/@thi.ng/associative/array-set.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.ArraySet = void 0;
-
-var _api = require("@thi.ng/api");
-
-var _equiv = require("@thi.ng/equiv");
-
-var _dissoc = require("./dissoc");
-
-var _equiv2 = require("./internal/equiv");
-
-var _into = require("./into");
-
-const __private = new WeakMap();
-
-const __vals = inst => __private.get(inst).vals;
-/**
- * An alternative set implementation to the native ES6 Set type. Uses
- * customizable equality/equivalence predicate and so is more useful
- * when dealing with structured data. Implements full API of native Set
- * and by the default uses `@thi.ng/equiv` for equivalence checking.
- *
- * Additionally, the type also implements the `ICopy`, `IEmpty` and
- * `IEquiv` interfaces itself.
- */
-
-
-class ArraySet extends Set {
-  constructor(vals, opts = {}) {
-    super();
-
-    __private.set(this, {
-      equiv: opts.equiv || _equiv.equiv,
-      vals: []
-    });
-
-    vals && this.into(vals);
-  }
-
-  *[Symbol.iterator]() {
-    yield* __vals(this);
-  }
-
-  get [Symbol.species]() {
-    return ArraySet;
-  }
-
-  get [Symbol.toStringTag]() {
-    return "ArraySet";
-  }
-
-  get size() {
-    return __vals(this).length;
-  }
-
-  copy() {
-    const $this = __private.get(this);
-
-    const s = new ArraySet(null, {
-      equiv: $this.equiv
-    });
-    __private.get(s).vals = $this.vals.slice();
-    return s;
-  }
-
-  empty() {
-    return new ArraySet(null, this.opts());
-  }
-
-  clear() {
-    __vals(this).length = 0;
-  }
-
-  first() {
-    if (this.size) {
-      return __vals(this)[0];
-    }
-  }
-
-  add(key) {
-    !this.has(key) && __vals(this).push(key);
-    return this;
-  }
-
-  into(keys) {
-    return (0, _into.into)(this, keys);
-  }
-
-  has(key) {
-    return this.get(key, _api.SEMAPHORE) !== _api.SEMAPHORE;
-  }
-  /**
-   * Returns the canonical value for `x`, if present. If the set
-   * contains no equivalent for `x`, returns `notFound`.
-   *
-   * @param key
-   * @param notFound
-   */
-
-
-  get(key, notFound) {
-    const $this = __private.get(this);
-
-    const eq = $this.equiv;
-    const vals = $this.vals;
-
-    for (let i = vals.length; --i >= 0;) {
-      if (eq(vals[i], key)) {
-        return vals[i];
-      }
-    }
-
-    return notFound;
-  }
-
-  delete(key) {
-    const $this = __private.get(this);
-
-    const eq = $this.equiv;
-    const vals = $this.vals;
-
-    for (let i = vals.length; --i >= 0;) {
-      if (eq(vals[i], key)) {
-        vals.splice(i, 1);
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  disj(keys) {
-    return (0, _dissoc.dissoc)(this, keys);
-  }
-
-  equiv(o) {
-    return (0, _equiv2.equivSet)(this, o);
-  }
-
-  forEach(fn, thisArg) {
-    const vals = __vals(this);
-
-    for (let i = vals.length; --i >= 0;) {
-      const v = vals[i];
-      fn.call(thisArg, v, v, this);
-    }
-  }
-
-  *entries() {
-    for (let v of __vals(this)) {
-      yield [v, v];
-    }
-  }
-
-  *keys() {
-    yield* __vals(this);
-  }
-
-  *values() {
-    yield* __vals(this);
-  }
-
-  opts() {
-    return {
-      equiv: __private.get(this).equiv
-    };
-  }
-
-}
-
-exports.ArraySet = ArraySet;
-},{"@thi.ng/api":"node_modules/@thi.ng/api/index.js","@thi.ng/equiv":"node_modules/@thi.ng/equiv/index.js","./dissoc":"node_modules/@thi.ng/associative/dissoc.js","./internal/equiv":"node_modules/@thi.ng/associative/internal/equiv.js","./into":"node_modules/@thi.ng/associative/into.js"}],"node_modules/@thi.ng/associative/common-keys.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.commonKeysObj = exports.commonKeysMap = void 0;
-
-/**
- * Like `commonKeysObj()`, but for ES6 Maps.
- *
- * @param a
- * @param b
- * @param out
- */
-const commonKeysMap = (a, b, out = []) => {
-  for (let k of a.keys()) {
-    b.has(k) && out.push(k);
-  }
-
-  return out;
-};
-/**
- * Returns array of keys present in both args, i.e. the set intersection
- * of the given objects' key / property sets.
- *
- * ```
- * commonKeys({ a: 1, b: 2 }, { c: 10, b: 20, a: 30 })
- * // [ "a", "b" ]
- * ```
- *
- * @param a
- * @param b
- * @param out
- */
-
-
-exports.commonKeysMap = commonKeysMap;
-
-const commonKeysObj = (a, b, out = []) => {
-  for (let k in a) {
-    b.hasOwnProperty(k) && out.push(k);
-  }
-
-  return out;
-};
-
-exports.commonKeysObj = commonKeysObj;
-},{}],"node_modules/@thi.ng/transducers/reduced.js":[function(require,module,exports) {
+},{"./exists-not-null":"node_modules/@thi.ng/checks/exists-not-null.js","./exists":"node_modules/@thi.ng/checks/exists.js","./has-crypto":"node_modules/@thi.ng/checks/has-crypto.js","./has-max-length":"node_modules/@thi.ng/checks/has-max-length.js","./has-min-length":"node_modules/@thi.ng/checks/has-min-length.js","./has-performance":"node_modules/@thi.ng/checks/has-performance.js","./has-wasm":"node_modules/@thi.ng/checks/has-wasm.js","./has-webgl":"node_modules/@thi.ng/checks/has-webgl.js","./has-websocket":"node_modules/@thi.ng/checks/has-websocket.js","./implements-function":"node_modules/@thi.ng/checks/implements-function.js","./is-array":"node_modules/@thi.ng/checks/is-array.js","./is-arraylike":"node_modules/@thi.ng/checks/is-arraylike.js","./is-blob":"node_modules/@thi.ng/checks/is-blob.js","./is-boolean":"node_modules/@thi.ng/checks/is-boolean.js","./is-chrome":"node_modules/@thi.ng/checks/is-chrome.js","./is-date":"node_modules/@thi.ng/checks/is-date.js","./is-even":"node_modules/@thi.ng/checks/is-even.js","./is-false":"node_modules/@thi.ng/checks/is-false.js","./is-file":"node_modules/@thi.ng/checks/is-file.js","./is-firefox":"node_modules/@thi.ng/checks/is-firefox.js","./is-function":"node_modules/@thi.ng/checks/is-function.js","./is-hex-color":"node_modules/@thi.ng/checks/is-hex-color.js","./is-ie":"node_modules/@thi.ng/checks/is-ie.js","./is-in-range":"node_modules/@thi.ng/checks/is-in-range.js","./is-int32":"node_modules/@thi.ng/checks/is-int32.js","./is-iterable":"node_modules/@thi.ng/checks/is-iterable.js","./is-map":"node_modules/@thi.ng/checks/is-map.js","./is-mobile":"node_modules/@thi.ng/checks/is-mobile.js","./is-nan":"node_modules/@thi.ng/checks/is-nan.js","./is-negative":"node_modules/@thi.ng/checks/is-negative.js","./is-nil":"node_modules/@thi.ng/checks/is-nil.js","./is-node":"node_modules/@thi.ng/checks/is-node.js","./is-not-string-iterable":"node_modules/@thi.ng/checks/is-not-string-iterable.js","./is-null":"node_modules/@thi.ng/checks/is-null.js","./is-number":"node_modules/@thi.ng/checks/is-number.js","./is-object":"node_modules/@thi.ng/checks/is-object.js","./is-odd":"node_modules/@thi.ng/checks/is-odd.js","./is-plain-object":"node_modules/@thi.ng/checks/is-plain-object.js","./is-positive":"node_modules/@thi.ng/checks/is-positive.js","./is-primitive":"node_modules/@thi.ng/checks/is-primitive.js","./is-promise":"node_modules/@thi.ng/checks/is-promise.js","./is-promiselike":"node_modules/@thi.ng/checks/is-promiselike.js","./is-regexp":"node_modules/@thi.ng/checks/is-regexp.js","./is-safari":"node_modules/@thi.ng/checks/is-safari.js","./is-set":"node_modules/@thi.ng/checks/is-set.js","./is-string":"node_modules/@thi.ng/checks/is-string.js","./is-symbol":"node_modules/@thi.ng/checks/is-symbol.js","./is-transferable":"node_modules/@thi.ng/checks/is-transferable.js","./is-true":"node_modules/@thi.ng/checks/is-true.js","./is-typedarray":"node_modules/@thi.ng/checks/is-typedarray.js","./is-uint32":"node_modules/@thi.ng/checks/is-uint32.js","./is-undefined":"node_modules/@thi.ng/checks/is-undefined.js","./is-uuid":"node_modules/@thi.ng/checks/is-uuid.js","./is-uuid4":"node_modules/@thi.ng/checks/is-uuid4.js","./is-zero":"node_modules/@thi.ng/checks/is-zero.js"}],"node_modules/@thi.ng/transducers/reduced.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5189,7 +4815,110 @@ const binarySearchNumeric = (buf, x, cmp = _compare.compareNumAsc) => {
 };
 
 exports.binarySearchNumeric = binarySearchNumeric;
-},{"@thi.ng/compare":"node_modules/@thi.ng/compare/index.js"}],"node_modules/@thi.ng/arrays/ends-with.js":[function(require,module,exports) {
+},{"@thi.ng/compare":"node_modules/@thi.ng/compare/index.js"}],"node_modules/@thi.ng/equiv/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.equivObject = exports.equivMap = exports.equivSet = exports.equivArrayLike = exports.equiv = void 0;
+const OBJP = Object.getPrototypeOf({});
+const FN = "function";
+const STR = "string";
+
+const equiv = (a, b) => {
+  let proto;
+
+  if (a === b) {
+    return true;
+  }
+
+  if (a != null) {
+    if (typeof a.equiv === FN) {
+      return a.equiv(b);
+    }
+  } else {
+    return a == b;
+  }
+
+  if (b != null) {
+    if (typeof b.equiv === FN) {
+      return b.equiv(a);
+    }
+  } else {
+    return a == b;
+  }
+
+  if (typeof a === STR || typeof b === STR) {
+    return false;
+  }
+
+  if ((proto = Object.getPrototypeOf(a), proto == null || proto === OBJP) && (proto = Object.getPrototypeOf(b), proto == null || proto === OBJP)) {
+    return equivObject(a, b);
+  }
+
+  if (typeof a !== FN && a.length !== undefined && typeof b !== FN && b.length !== undefined) {
+    return equivArrayLike(a, b);
+  }
+
+  if (a instanceof Set && b instanceof Set) {
+    return equivSet(a, b);
+  }
+
+  if (a instanceof Map && b instanceof Map) {
+    return equivMap(a, b);
+  }
+
+  if (a instanceof Date && b instanceof Date) {
+    return a.getTime() === b.getTime();
+  }
+
+  if (a instanceof RegExp && b instanceof RegExp) {
+    return a.toString() === b.toString();
+  } // NaN
+
+
+  return a !== a && b !== b;
+};
+
+exports.equiv = equiv;
+
+const equivArrayLike = (a, b, _equiv = equiv) => {
+  let l = a.length;
+
+  if (l === b.length) {
+    while (--l >= 0 && _equiv(a[l], b[l]));
+  }
+
+  return l < 0;
+};
+
+exports.equivArrayLike = equivArrayLike;
+
+const equivSet = (a, b, _equiv = equiv) => a.size === b.size && _equiv([...a.keys()].sort(), [...b.keys()].sort());
+
+exports.equivSet = equivSet;
+
+const equivMap = (a, b, _equiv = equiv) => a.size === b.size && _equiv([...a].sort(), [...b].sort());
+
+exports.equivMap = equivMap;
+
+const equivObject = (a, b, _equiv = equiv) => {
+  if (Object.keys(a).length !== Object.keys(b).length) {
+    return false;
+  }
+
+  for (let k in a) {
+    if (!b.hasOwnProperty(k) || !_equiv(a[k], b[k])) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+exports.equivObject = equivObject;
+},{}],"node_modules/@thi.ng/arrays/ends-with.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -12096,7 +11825,1324 @@ Object.keys(_zip).forEach(function (key) {
     }
   });
 });
-},{"./iterator":"node_modules/@thi.ng/transducers/iterator.js","./reduce":"node_modules/@thi.ng/transducers/reduce.js","./reduced":"node_modules/@thi.ng/transducers/reduced.js","./run":"node_modules/@thi.ng/transducers/run.js","./step":"node_modules/@thi.ng/transducers/step.js","./transduce":"node_modules/@thi.ng/transducers/transduce.js","./rfn/add":"node_modules/@thi.ng/transducers/rfn/add.js","./rfn/assoc-map":"node_modules/@thi.ng/transducers/rfn/assoc-map.js","./rfn/assoc-obj":"node_modules/@thi.ng/transducers/rfn/assoc-obj.js","./rfn/conj":"node_modules/@thi.ng/transducers/rfn/conj.js","./rfn/count":"node_modules/@thi.ng/transducers/rfn/count.js","./rfn/div":"node_modules/@thi.ng/transducers/rfn/div.js","./rfn/every":"node_modules/@thi.ng/transducers/rfn/every.js","./rfn/fill":"node_modules/@thi.ng/transducers/rfn/fill.js","./rfn/frequencies":"node_modules/@thi.ng/transducers/rfn/frequencies.js","./rfn/group-binary":"node_modules/@thi.ng/transducers/rfn/group-binary.js","./rfn/group-by-map":"node_modules/@thi.ng/transducers/rfn/group-by-map.js","./rfn/group-by-obj":"node_modules/@thi.ng/transducers/rfn/group-by-obj.js","./rfn/last":"node_modules/@thi.ng/transducers/rfn/last.js","./rfn/max-compare":"node_modules/@thi.ng/transducers/rfn/max-compare.js","./rfn/max":"node_modules/@thi.ng/transducers/rfn/max.js","./rfn/mean":"node_modules/@thi.ng/transducers/rfn/mean.js","./rfn/min-compare":"node_modules/@thi.ng/transducers/rfn/min-compare.js","./rfn/min":"node_modules/@thi.ng/transducers/rfn/min.js","./rfn/mul":"node_modules/@thi.ng/transducers/rfn/mul.js","./rfn/push-copy":"node_modules/@thi.ng/transducers/rfn/push-copy.js","./rfn/push":"node_modules/@thi.ng/transducers/rfn/push.js","./rfn/reductions":"node_modules/@thi.ng/transducers/rfn/reductions.js","./rfn/some":"node_modules/@thi.ng/transducers/rfn/some.js","./rfn/str":"node_modules/@thi.ng/transducers/rfn/str.js","./rfn/sub":"node_modules/@thi.ng/transducers/rfn/sub.js","./xform/benchmark":"node_modules/@thi.ng/transducers/xform/benchmark.js","./xform/cat":"node_modules/@thi.ng/transducers/xform/cat.js","./xform/converge":"node_modules/@thi.ng/transducers/xform/converge.js","./xform/convolve":"node_modules/@thi.ng/transducers/xform/convolve.js","./xform/dedupe":"node_modules/@thi.ng/transducers/xform/dedupe.js","./xform/delayed":"node_modules/@thi.ng/transducers/xform/delayed.js","./xform/distinct":"node_modules/@thi.ng/transducers/xform/distinct.js","./xform/drop-nth":"node_modules/@thi.ng/transducers/xform/drop-nth.js","./xform/drop-while":"node_modules/@thi.ng/transducers/xform/drop-while.js","./xform/drop":"node_modules/@thi.ng/transducers/xform/drop.js","./xform/duplicate":"node_modules/@thi.ng/transducers/xform/duplicate.js","./xform/filter":"node_modules/@thi.ng/transducers/xform/filter.js","./xform/filter-fuzzy":"node_modules/@thi.ng/transducers/xform/filter-fuzzy.js","./xform/flatten-with":"node_modules/@thi.ng/transducers/xform/flatten-with.js","./xform/flatten":"node_modules/@thi.ng/transducers/xform/flatten.js","./xform/indexed":"node_modules/@thi.ng/transducers/xform/indexed.js","./xform/interleave":"node_modules/@thi.ng/transducers/xform/interleave.js","./xform/interpolate":"node_modules/@thi.ng/transducers/xform/interpolate.js","./xform/interpolate-hermite":"node_modules/@thi.ng/transducers/xform/interpolate-hermite.js","./xform/interpolate-linear":"node_modules/@thi.ng/transducers/xform/interpolate-linear.js","./xform/interpose":"node_modules/@thi.ng/transducers/xform/interpose.js","./xform/keep":"node_modules/@thi.ng/transducers/xform/keep.js","./xform/labeled":"node_modules/@thi.ng/transducers/xform/labeled.js","./xform/map-deep":"node_modules/@thi.ng/transducers/xform/map-deep.js","./xform/map-indexed":"node_modules/@thi.ng/transducers/xform/map-indexed.js","./xform/map-keys":"node_modules/@thi.ng/transducers/xform/map-keys.js","./xform/map-nth":"node_modules/@thi.ng/transducers/xform/map-nth.js","./xform/map-vals":"node_modules/@thi.ng/transducers/xform/map-vals.js","./xform/map":"node_modules/@thi.ng/transducers/xform/map.js","./xform/mapcat":"node_modules/@thi.ng/transducers/xform/mapcat.js","./xform/match-first":"node_modules/@thi.ng/transducers/xform/match-first.js","./xform/match-last":"node_modules/@thi.ng/transducers/xform/match-last.js","./xform/moving-average":"node_modules/@thi.ng/transducers/xform/moving-average.js","./xform/moving-median":"node_modules/@thi.ng/transducers/xform/moving-median.js","./xform/multiplex":"node_modules/@thi.ng/transducers/xform/multiplex.js","./xform/multiplex-obj":"node_modules/@thi.ng/transducers/xform/multiplex-obj.js","./xform/noop":"node_modules/@thi.ng/transducers/xform/noop.js","./xform/pad-last":"node_modules/@thi.ng/transducers/xform/pad-last.js","./xform/page":"node_modules/@thi.ng/transducers/xform/page.js","./xform/partition-by":"node_modules/@thi.ng/transducers/xform/partition-by.js","./xform/partition-of":"node_modules/@thi.ng/transducers/xform/partition-of.js","./xform/partition-sort":"node_modules/@thi.ng/transducers/xform/partition-sort.js","./xform/partition-sync":"node_modules/@thi.ng/transducers/xform/partition-sync.js","./xform/partition":"node_modules/@thi.ng/transducers/xform/partition.js","./xform/pluck":"node_modules/@thi.ng/transducers/xform/pluck.js","./xform/rename":"node_modules/@thi.ng/transducers/xform/rename.js","./xform/sample":"node_modules/@thi.ng/transducers/xform/sample.js","./xform/scan":"node_modules/@thi.ng/transducers/xform/scan.js","./xform/select-keys":"node_modules/@thi.ng/transducers/xform/select-keys.js","./xform/side-effect":"node_modules/@thi.ng/transducers/xform/side-effect.js","./xform/sliding-window":"node_modules/@thi.ng/transducers/xform/sliding-window.js","./xform/stream-shuffle":"node_modules/@thi.ng/transducers/xform/stream-shuffle.js","./xform/stream-sort":"node_modules/@thi.ng/transducers/xform/stream-sort.js","./xform/struct":"node_modules/@thi.ng/transducers/xform/struct.js","./xform/swizzle":"node_modules/@thi.ng/transducers/xform/swizzle.js","./xform/take-nth":"node_modules/@thi.ng/transducers/xform/take-nth.js","./xform/take-last":"node_modules/@thi.ng/transducers/xform/take-last.js","./xform/take-while":"node_modules/@thi.ng/transducers/xform/take-while.js","./xform/take":"node_modules/@thi.ng/transducers/xform/take.js","./xform/throttle":"node_modules/@thi.ng/transducers/xform/throttle.js","./xform/throttle-time":"node_modules/@thi.ng/transducers/xform/throttle-time.js","./xform/toggle":"node_modules/@thi.ng/transducers/xform/toggle.js","./xform/trace":"node_modules/@thi.ng/transducers/xform/trace.js","./xform/word-wrap":"node_modules/@thi.ng/transducers/xform/word-wrap.js","./func/comp":"node_modules/@thi.ng/transducers/func/comp.js","./func/compr":"node_modules/@thi.ng/transducers/func/compr.js","./func/deep-transform":"node_modules/@thi.ng/transducers/func/deep-transform.js","./func/juxtr":"node_modules/@thi.ng/transducers/func/juxtr.js","./func/key-selector":"node_modules/@thi.ng/transducers/func/key-selector.js","./func/lookup":"node_modules/@thi.ng/transducers/func/lookup.js","./func/renamer":"node_modules/@thi.ng/transducers/func/renamer.js","./iter/as-iterable":"node_modules/@thi.ng/transducers/iter/as-iterable.js","./iter/choices":"node_modules/@thi.ng/transducers/iter/choices.js","./iter/concat":"node_modules/@thi.ng/transducers/iter/concat.js","./iter/cycle":"node_modules/@thi.ng/transducers/iter/cycle.js","./iter/extend-sides":"node_modules/@thi.ng/transducers/iter/extend-sides.js","./iter/iterate":"node_modules/@thi.ng/transducers/iter/iterate.js","./iter/keys":"node_modules/@thi.ng/transducers/iter/keys.js","./iter/norm-range":"node_modules/@thi.ng/transducers/iter/norm-range.js","./iter/pad-sides":"node_modules/@thi.ng/transducers/iter/pad-sides.js","./iter/pairs":"node_modules/@thi.ng/transducers/iter/pairs.js","./iter/permutations":"node_modules/@thi.ng/transducers/iter/permutations.js","./iter/range":"node_modules/@thi.ng/transducers/iter/range.js","./iter/range2d":"node_modules/@thi.ng/transducers/iter/range2d.js","./iter/range3d":"node_modules/@thi.ng/transducers/iter/range3d.js","./iter/repeat":"node_modules/@thi.ng/transducers/iter/repeat.js","./iter/repeatedly":"node_modules/@thi.ng/transducers/iter/repeatedly.js","./iter/reverse":"node_modules/@thi.ng/transducers/iter/reverse.js","./iter/symmetric":"node_modules/@thi.ng/transducers/iter/symmetric.js","./iter/tween":"node_modules/@thi.ng/transducers/iter/tween.js","./iter/vals":"node_modules/@thi.ng/transducers/iter/vals.js","./iter/wrap-sides":"node_modules/@thi.ng/transducers/iter/wrap-sides.js","./iter/zip":"node_modules/@thi.ng/transducers/iter/zip.js"}],"node_modules/@thi.ng/associative/utils.js":[function(require,module,exports) {
+},{"./iterator":"node_modules/@thi.ng/transducers/iterator.js","./reduce":"node_modules/@thi.ng/transducers/reduce.js","./reduced":"node_modules/@thi.ng/transducers/reduced.js","./run":"node_modules/@thi.ng/transducers/run.js","./step":"node_modules/@thi.ng/transducers/step.js","./transduce":"node_modules/@thi.ng/transducers/transduce.js","./rfn/add":"node_modules/@thi.ng/transducers/rfn/add.js","./rfn/assoc-map":"node_modules/@thi.ng/transducers/rfn/assoc-map.js","./rfn/assoc-obj":"node_modules/@thi.ng/transducers/rfn/assoc-obj.js","./rfn/conj":"node_modules/@thi.ng/transducers/rfn/conj.js","./rfn/count":"node_modules/@thi.ng/transducers/rfn/count.js","./rfn/div":"node_modules/@thi.ng/transducers/rfn/div.js","./rfn/every":"node_modules/@thi.ng/transducers/rfn/every.js","./rfn/fill":"node_modules/@thi.ng/transducers/rfn/fill.js","./rfn/frequencies":"node_modules/@thi.ng/transducers/rfn/frequencies.js","./rfn/group-binary":"node_modules/@thi.ng/transducers/rfn/group-binary.js","./rfn/group-by-map":"node_modules/@thi.ng/transducers/rfn/group-by-map.js","./rfn/group-by-obj":"node_modules/@thi.ng/transducers/rfn/group-by-obj.js","./rfn/last":"node_modules/@thi.ng/transducers/rfn/last.js","./rfn/max-compare":"node_modules/@thi.ng/transducers/rfn/max-compare.js","./rfn/max":"node_modules/@thi.ng/transducers/rfn/max.js","./rfn/mean":"node_modules/@thi.ng/transducers/rfn/mean.js","./rfn/min-compare":"node_modules/@thi.ng/transducers/rfn/min-compare.js","./rfn/min":"node_modules/@thi.ng/transducers/rfn/min.js","./rfn/mul":"node_modules/@thi.ng/transducers/rfn/mul.js","./rfn/push-copy":"node_modules/@thi.ng/transducers/rfn/push-copy.js","./rfn/push":"node_modules/@thi.ng/transducers/rfn/push.js","./rfn/reductions":"node_modules/@thi.ng/transducers/rfn/reductions.js","./rfn/some":"node_modules/@thi.ng/transducers/rfn/some.js","./rfn/str":"node_modules/@thi.ng/transducers/rfn/str.js","./rfn/sub":"node_modules/@thi.ng/transducers/rfn/sub.js","./xform/benchmark":"node_modules/@thi.ng/transducers/xform/benchmark.js","./xform/cat":"node_modules/@thi.ng/transducers/xform/cat.js","./xform/converge":"node_modules/@thi.ng/transducers/xform/converge.js","./xform/convolve":"node_modules/@thi.ng/transducers/xform/convolve.js","./xform/dedupe":"node_modules/@thi.ng/transducers/xform/dedupe.js","./xform/delayed":"node_modules/@thi.ng/transducers/xform/delayed.js","./xform/distinct":"node_modules/@thi.ng/transducers/xform/distinct.js","./xform/drop-nth":"node_modules/@thi.ng/transducers/xform/drop-nth.js","./xform/drop-while":"node_modules/@thi.ng/transducers/xform/drop-while.js","./xform/drop":"node_modules/@thi.ng/transducers/xform/drop.js","./xform/duplicate":"node_modules/@thi.ng/transducers/xform/duplicate.js","./xform/filter":"node_modules/@thi.ng/transducers/xform/filter.js","./xform/filter-fuzzy":"node_modules/@thi.ng/transducers/xform/filter-fuzzy.js","./xform/flatten-with":"node_modules/@thi.ng/transducers/xform/flatten-with.js","./xform/flatten":"node_modules/@thi.ng/transducers/xform/flatten.js","./xform/indexed":"node_modules/@thi.ng/transducers/xform/indexed.js","./xform/interleave":"node_modules/@thi.ng/transducers/xform/interleave.js","./xform/interpolate":"node_modules/@thi.ng/transducers/xform/interpolate.js","./xform/interpolate-hermite":"node_modules/@thi.ng/transducers/xform/interpolate-hermite.js","./xform/interpolate-linear":"node_modules/@thi.ng/transducers/xform/interpolate-linear.js","./xform/interpose":"node_modules/@thi.ng/transducers/xform/interpose.js","./xform/keep":"node_modules/@thi.ng/transducers/xform/keep.js","./xform/labeled":"node_modules/@thi.ng/transducers/xform/labeled.js","./xform/map-deep":"node_modules/@thi.ng/transducers/xform/map-deep.js","./xform/map-indexed":"node_modules/@thi.ng/transducers/xform/map-indexed.js","./xform/map-keys":"node_modules/@thi.ng/transducers/xform/map-keys.js","./xform/map-nth":"node_modules/@thi.ng/transducers/xform/map-nth.js","./xform/map-vals":"node_modules/@thi.ng/transducers/xform/map-vals.js","./xform/map":"node_modules/@thi.ng/transducers/xform/map.js","./xform/mapcat":"node_modules/@thi.ng/transducers/xform/mapcat.js","./xform/match-first":"node_modules/@thi.ng/transducers/xform/match-first.js","./xform/match-last":"node_modules/@thi.ng/transducers/xform/match-last.js","./xform/moving-average":"node_modules/@thi.ng/transducers/xform/moving-average.js","./xform/moving-median":"node_modules/@thi.ng/transducers/xform/moving-median.js","./xform/multiplex":"node_modules/@thi.ng/transducers/xform/multiplex.js","./xform/multiplex-obj":"node_modules/@thi.ng/transducers/xform/multiplex-obj.js","./xform/noop":"node_modules/@thi.ng/transducers/xform/noop.js","./xform/pad-last":"node_modules/@thi.ng/transducers/xform/pad-last.js","./xform/page":"node_modules/@thi.ng/transducers/xform/page.js","./xform/partition-by":"node_modules/@thi.ng/transducers/xform/partition-by.js","./xform/partition-of":"node_modules/@thi.ng/transducers/xform/partition-of.js","./xform/partition-sort":"node_modules/@thi.ng/transducers/xform/partition-sort.js","./xform/partition-sync":"node_modules/@thi.ng/transducers/xform/partition-sync.js","./xform/partition":"node_modules/@thi.ng/transducers/xform/partition.js","./xform/pluck":"node_modules/@thi.ng/transducers/xform/pluck.js","./xform/rename":"node_modules/@thi.ng/transducers/xform/rename.js","./xform/sample":"node_modules/@thi.ng/transducers/xform/sample.js","./xform/scan":"node_modules/@thi.ng/transducers/xform/scan.js","./xform/select-keys":"node_modules/@thi.ng/transducers/xform/select-keys.js","./xform/side-effect":"node_modules/@thi.ng/transducers/xform/side-effect.js","./xform/sliding-window":"node_modules/@thi.ng/transducers/xform/sliding-window.js","./xform/stream-shuffle":"node_modules/@thi.ng/transducers/xform/stream-shuffle.js","./xform/stream-sort":"node_modules/@thi.ng/transducers/xform/stream-sort.js","./xform/struct":"node_modules/@thi.ng/transducers/xform/struct.js","./xform/swizzle":"node_modules/@thi.ng/transducers/xform/swizzle.js","./xform/take-nth":"node_modules/@thi.ng/transducers/xform/take-nth.js","./xform/take-last":"node_modules/@thi.ng/transducers/xform/take-last.js","./xform/take-while":"node_modules/@thi.ng/transducers/xform/take-while.js","./xform/take":"node_modules/@thi.ng/transducers/xform/take.js","./xform/throttle":"node_modules/@thi.ng/transducers/xform/throttle.js","./xform/throttle-time":"node_modules/@thi.ng/transducers/xform/throttle-time.js","./xform/toggle":"node_modules/@thi.ng/transducers/xform/toggle.js","./xform/trace":"node_modules/@thi.ng/transducers/xform/trace.js","./xform/word-wrap":"node_modules/@thi.ng/transducers/xform/word-wrap.js","./func/comp":"node_modules/@thi.ng/transducers/func/comp.js","./func/compr":"node_modules/@thi.ng/transducers/func/compr.js","./func/deep-transform":"node_modules/@thi.ng/transducers/func/deep-transform.js","./func/juxtr":"node_modules/@thi.ng/transducers/func/juxtr.js","./func/key-selector":"node_modules/@thi.ng/transducers/func/key-selector.js","./func/lookup":"node_modules/@thi.ng/transducers/func/lookup.js","./func/renamer":"node_modules/@thi.ng/transducers/func/renamer.js","./iter/as-iterable":"node_modules/@thi.ng/transducers/iter/as-iterable.js","./iter/choices":"node_modules/@thi.ng/transducers/iter/choices.js","./iter/concat":"node_modules/@thi.ng/transducers/iter/concat.js","./iter/cycle":"node_modules/@thi.ng/transducers/iter/cycle.js","./iter/extend-sides":"node_modules/@thi.ng/transducers/iter/extend-sides.js","./iter/iterate":"node_modules/@thi.ng/transducers/iter/iterate.js","./iter/keys":"node_modules/@thi.ng/transducers/iter/keys.js","./iter/norm-range":"node_modules/@thi.ng/transducers/iter/norm-range.js","./iter/pad-sides":"node_modules/@thi.ng/transducers/iter/pad-sides.js","./iter/pairs":"node_modules/@thi.ng/transducers/iter/pairs.js","./iter/permutations":"node_modules/@thi.ng/transducers/iter/permutations.js","./iter/range":"node_modules/@thi.ng/transducers/iter/range.js","./iter/range2d":"node_modules/@thi.ng/transducers/iter/range2d.js","./iter/range3d":"node_modules/@thi.ng/transducers/iter/range3d.js","./iter/repeat":"node_modules/@thi.ng/transducers/iter/repeat.js","./iter/repeatedly":"node_modules/@thi.ng/transducers/iter/repeatedly.js","./iter/reverse":"node_modules/@thi.ng/transducers/iter/reverse.js","./iter/symmetric":"node_modules/@thi.ng/transducers/iter/symmetric.js","./iter/tween":"node_modules/@thi.ng/transducers/iter/tween.js","./iter/vals":"node_modules/@thi.ng/transducers/iter/vals.js","./iter/wrap-sides":"node_modules/@thi.ng/transducers/iter/wrap-sides.js","./iter/zip":"node_modules/@thi.ng/transducers/iter/zip.js"}],"node_modules/@thi.ng/rstream/utils/idgen.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.optsWithID = exports.nextID = void 0;
+let NEXT_ID = 0;
+
+const nextID = () => NEXT_ID++;
+
+exports.nextID = nextID;
+
+const optsWithID = (prefix, opts) => !opts || !opts.id ? Object.assign(Object.assign({}, opts), {
+  id: prefix + "-" + nextID()
+}) : opts;
+
+exports.optsWithID = optsWithID;
+},{}],"node_modules/@thi.ng/rstream/subscription.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Subscription = exports.subscription = void 0;
+
+var _api = require("@thi.ng/api");
+
+var _arrays = require("@thi.ng/arrays");
+
+var _checks = require("@thi.ng/checks");
+
+var _errors = require("@thi.ng/errors");
+
+var _transducers = require("@thi.ng/transducers");
+
+var _api2 = require("./api");
+
+var _idgen = require("./utils/idgen");
+
+/**
+ * Creates a new {@link Subscription} instance, the fundamental datatype
+ * and building block provided by this package.
+ *
+ * @remarks
+ * Most other types in rstream, including {@link Stream}s, are
+ * `Subscription`s and all can be:
+ *
+ * - linked into directed graphs (sync or async & not necessarily DAGs)
+ * - transformed using transducers (incl. support for early termination)
+ * - can have any number of subscribers (optionally each w/ their own
+ *   transducers)
+ * - recursively unsubscribe themselves from parent after their last
+ *   subscriber unsubscribed (configurable)
+ * - will go into a non-recoverable error state if none of the
+ *   subscribers has an error handler itself
+ * - implement the {@link @thi.ng/api#IDeref} interface
+ *
+ * Subscription behavior can be customized via the additional (optional)
+ * options arg. See `CommonOpts` and `SubscriptionOpts` for further
+ * details.
+ *
+ * @example
+ * ```ts
+ * // as reactive value mechanism (same as with stream() above)
+ * s = subscription();
+ * s.subscribe(trace("s1"));
+ * s.subscribe(trace("s2"), { xform: tx.filter((x) => x > 25) });
+ *
+ * // external trigger
+ * s.next(23);
+ * // s1 23
+ * s.next(42);
+ * // s1 42
+ * // s2 42
+ * ```
+ *
+ * @param sub
+ * @param opts
+ */
+const subscription = (sub, opts) => new Subscription(sub, opts);
+
+exports.subscription = subscription;
+
+class Subscription {
+  constructor(sub, opts = {}) {
+    this.state = 0
+    /* IDLE */
+    ;
+    this.parent = opts.parent;
+    this.closeIn = opts.closeIn !== undefined ? opts.closeIn : 2
+    /* LAST */
+    ;
+    this.closeOut = opts.closeOut !== undefined ? opts.closeOut : 2
+    /* LAST */
+    ;
+    this.cacheLast = opts.cache !== false;
+    this.id = opts.id || `sub-${(0, _idgen.nextID)()}`;
+    this.last = _api.SEMAPHORE;
+    this.subs = [];
+
+    if (sub) {
+      this.subs.push(sub);
+    }
+
+    if (opts.xform) {
+      this.xform = opts.xform((0, _transducers.push)());
+    }
+  }
+
+  deref() {
+    return this.last !== _api.SEMAPHORE ? this.last : undefined;
+  }
+
+  getState() {
+    return this.state;
+  }
+
+  subscribe(...args) {
+    this.ensureState();
+    let sub;
+    let opts = args.length > 1 && (0, _checks.isPlainObject)((0, _arrays.peek)(args)) ? Object.assign({}, args.pop()) : {};
+
+    switch (args.length) {
+      case 1:
+        if ((0, _checks.isFunction)(args[0])) {
+          opts.xform = args[0];
+          !opts.id && (opts.id = `xform-${(0, _idgen.nextID)()}`);
+        } else {
+          sub = args[0];
+        }
+
+        break;
+
+      case 2:
+        sub = args[0];
+        opts.xform = args[1];
+        break;
+
+      default:
+        (0, _errors.illegalArity)(args.length);
+    }
+
+    if ((0, _checks.implementsFunction)(sub, "subscribe")) {
+      sub.parent = this;
+    } else {
+      // FIXME inherit options from this sub or defaults?
+      sub = subscription(sub, Object.assign({
+        parent: this
+      }, opts));
+    }
+
+    this.last !== _api.SEMAPHORE && sub.next(this.last);
+    return this.addWrapped(sub);
+  }
+  /**
+   * Returns array of new child subscriptions for all given
+   * subscribers.
+   *
+   * @param subs
+   */
+
+
+  subscribeAll(...subs) {
+    const wrapped = [];
+
+    for (let s of subs) {
+      wrapped.push(this.subscribe(s));
+    }
+
+    return wrapped;
+  }
+
+  transform(...xf) {
+    const n = xf.length - 1;
+    return (0, _checks.isPlainObject)(xf[n]) ? this.subscribe((0, _transducers.comp)(...xf.slice(0, n)), xf[n]) : this.subscribe((0, _transducers.comp)(...xf));
+  }
+  /**
+   * If called without arg, removes this subscription from parent (if
+   * any), cleans up internal state and goes into DONE state. If
+   * called with arg, removes the sub from internal pool and if no
+   * other subs are remaining also cleans up itself and goes into DONE
+   * state.
+   *
+   * @param sub
+   */
+
+
+  unsubscribe(sub) {
+    _api2.LOGGER.debug(this.id, "unsub start", sub ? sub.id : "self");
+
+    if (!sub) {
+      let res = true;
+
+      if (this.parent) {
+        res = this.parent.unsubscribe(this);
+      }
+
+      this.state = 2
+      /* DONE */
+      ;
+      this.cleanup();
+      return res;
+    }
+
+    if (this.subs) {
+      _api2.LOGGER.debug(this.id, "unsub child", sub.id);
+
+      const idx = this.subs.indexOf(sub);
+
+      if (idx >= 0) {
+        this.subs.splice(idx, 1);
+
+        if (this.closeOut === 1
+        /* FIRST */
+        || !this.subs.length && this.closeOut !== 0
+        /* NEVER */
+        ) {
+          this.unsubscribe();
+        }
+
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  next(x) {
+    if (this.state < 2
+    /* DONE */
+    ) {
+        if (this.xform) {
+          const acc = this.xform[2]([], x);
+          const uacc = (0, _transducers.unreduced)(acc);
+          const n = uacc.length;
+
+          for (let i = 0; i < n; i++) {
+            this.dispatch(uacc[i]);
+          }
+
+          if ((0, _transducers.isReduced)(acc)) {
+            this.done();
+          }
+        } else {
+          this.dispatch(x);
+        }
+      }
+  }
+
+  done() {
+    _api2.LOGGER.debug(this.id, "entering done()");
+
+    if (this.state < 2
+    /* DONE */
+    ) {
+        if (this.xform) {
+          const acc = this.xform[1]([]);
+          const uacc = (0, _transducers.unreduced)(acc);
+          const n = uacc.length;
+
+          for (let i = 0; i < n; i++) {
+            this.dispatch(uacc[i]);
+          }
+        }
+
+        this.state = 2
+        /* DONE */
+        ;
+
+        for (let s of [...this.subs]) {
+          try {
+            s.done && s.done();
+          } catch (e) {
+            s.error ? s.error(e) : this.error(e);
+          }
+        }
+
+        this.unsubscribe();
+
+        _api2.LOGGER.debug(this.id, "exiting done()");
+      }
+  }
+
+  error(e) {
+    this.state = 3
+    /* ERROR */
+    ;
+    let notified = false;
+
+    if (this.subs && this.subs.length) {
+      for (let s of this.subs.slice()) {
+        if (s.error) {
+          s.error(e);
+          notified = true;
+        }
+      }
+    }
+
+    if (!notified) {
+      _api2.LOGGER.warn(this.id, "unhandled error:", e);
+
+      if (this.parent) {
+        _api2.LOGGER.debug(this.id, "unsubscribing...");
+
+        this.unsubscribe();
+        this.state = 3
+        /* ERROR */
+        ;
+      }
+    }
+  }
+
+  addWrapped(wrapped) {
+    this.subs.push(wrapped);
+    this.state = 1
+    /* ACTIVE */
+    ;
+    return wrapped;
+  }
+
+  dispatch(x) {
+    // LOGGER.debug(this.id, "dispatch", x);
+    this.cacheLast && (this.last = x);
+    const subs = this.subs;
+    let s;
+
+    if (subs.length === 1) {
+      s = subs[0];
+
+      try {
+        s.next && s.next(x);
+      } catch (e) {
+        s.error ? s.error(e) : this.error(e);
+      }
+    } else {
+      for (let i = subs.length; --i >= 0;) {
+        s = subs[i];
+
+        try {
+          s.next && s.next(x);
+        } catch (e) {
+          s.error ? s.error(e) : this.error(e);
+        }
+      }
+    }
+  }
+
+  ensureState() {
+    if (this.state >= 2
+    /* DONE */
+    ) {
+        (0, _errors.illegalState)(`operation not allowed in state ${this.state}`);
+      }
+  }
+
+  cleanup() {
+    _api2.LOGGER.debug(this.id, "cleanup");
+
+    this.subs.length = 0;
+    delete this.parent;
+    delete this.xform;
+    delete this.last;
+  }
+
+}
+
+exports.Subscription = Subscription;
+},{"@thi.ng/api":"node_modules/@thi.ng/api/index.js","@thi.ng/arrays":"node_modules/@thi.ng/arrays/index.js","@thi.ng/checks":"node_modules/@thi.ng/checks/index.js","@thi.ng/errors":"node_modules/@thi.ng/errors/index.js","@thi.ng/transducers":"node_modules/@thi.ng/transducers/index.js","./api":"node_modules/@thi.ng/rstream/api.js","./utils/idgen":"node_modules/@thi.ng/rstream/utils/idgen.js"}],"node_modules/@thi.ng/rstream/stream-sync.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.StreamSync = exports.sync = void 0;
+
+var _checks = require("@thi.ng/checks");
+
+var _transducers = require("@thi.ng/transducers");
+
+var _api = require("./api");
+
+var _subscription = require("./subscription");
+
+var _idgen = require("./utils/idgen");
+
+/**
+ * Similar to {@link StreamMerge}, but with extra synchronization of
+ * inputs. Before emitting any new values, {@link StreamSync} collects
+ * values until at least one has been received from *all* inputs. Once
+ * that's the case, the collected values are sent as labeled tuple
+ * object to downstream subscribers.
+ *
+ * @remarks
+ * Each value in the emitted tuple objects is stored under their input
+ * stream's ID. Only the last value received from each input is passed
+ * on. After the initial tuple has been emitted, you can choose from two
+ * possible behaviors:
+ *
+ * 1) Any future change in any input will produce a new result tuple.
+ *    These tuples will retain the most recently read values from other
+ *    inputs. This behavior is the default and illustrated in the above
+ *    schematic.
+ * 2) If the `reset` option is `true`, every input will have to provide
+ *    at least one new value again until another result tuple is
+ *    produced.
+ *
+ * Any done inputs are automatically removed. By default, `StreamSync`
+ * calls {@link ISubscriber.done} when the last active input is done,
+ * but this behavior can be overridden via the provided options.
+ *
+ * Input streams can be added and removed dynamically and the emitted
+ * tuple size adjusts to the current number of inputs (the next time a
+ * value is received from any input).
+ *
+ * If the `reset` option is enabled, the last emitted tuple is allowed
+ * to be incomplete, by default. To only allow complete tuples, also set
+ * the `all` option to `false`.
+ *
+ * The synchronization is done via the `partitionSync()` transducer from
+ * the @thi.ng/transducers package. See this function's docs for further
+ * details.
+ *
+ * @example
+ * ```ts
+ * const a = rs.stream();
+ * const b = rs.stream();
+ * s = sync({ src: { a, b } }).subscribe(trace("result: "));
+ * a.next(1);
+ * b.next(2);
+ * // result: { a: 1, b: 2 }
+ * ```
+ *
+ * @see StreamSyncOpts
+ *
+ * @param opts
+ */
+const sync = opts => new StreamSync(opts);
+
+exports.sync = sync;
+
+class StreamSync extends _subscription.Subscription {
+  constructor(opts) {
+    const srcIDs = new Set();
+    const psync = (0, _transducers.partitionSync)(srcIDs, {
+      key: x => x[0],
+      mergeOnly: opts.mergeOnly === true,
+      reset: opts.reset === true,
+      all: opts.all !== false,
+      backPressure: opts.backPressure || 0
+    });
+    const mapv = (0, _transducers.mapVals)(x => x[1]);
+    super(undefined, (0, _idgen.optsWithID)("streamsync", Object.assign(Object.assign({}, opts), {
+      xform: opts.xform ? (0, _transducers.comp)(psync, mapv, opts.xform) : (0, _transducers.comp)(psync, mapv)
+    })));
+    this.sources = new Map();
+    this.realSourceIDs = new Map();
+    this.invRealSourceIDs = new Map();
+    this.idSources = new Map();
+    this.sourceIDs = srcIDs;
+    opts.src && this.addAll(opts.src);
+  }
+
+  add(src, id) {
+    id || (id = src.id);
+    this.ensureState();
+    this.sourceIDs.add(id);
+    this.realSourceIDs.set(id, src.id);
+    this.invRealSourceIDs.set(src.id, id);
+    this.idSources.set(src.id, src);
+    this.sources.set(src, src.subscribe({
+      next: x => {
+        if (x[1] instanceof _subscription.Subscription) {
+          this.add(x[1]);
+        } else {
+          this.next(x);
+        }
+      },
+      done: () => this.markDone(src),
+      __owner: this
+    }, (0, _transducers.labeled)(id), {
+      id: `in-${id}`
+    }));
+  }
+
+  addAll(src) {
+    if ((0, _checks.isPlainObject)(src)) {
+      // pre-add all source ids for partitionSync
+      for (let id in src) {
+        this.sourceIDs.add(id);
+      }
+
+      for (let id in src) {
+        this.add(src[id], id);
+      }
+    } else {
+      // pre-add all source ids for partitionSync
+      for (let s of src) {
+        this.sourceIDs.add(s.id);
+      }
+
+      for (let s of src) {
+        this.add(s);
+      }
+    }
+  }
+
+  remove(src) {
+    const sub = this.sources.get(src);
+
+    if (sub) {
+      const id = this.invRealSourceIDs.get(src.id);
+
+      _api.LOGGER.info(`removing src: ${src.id} (${id})`);
+
+      this.sourceIDs.delete(id);
+      this.realSourceIDs.delete(id);
+      this.invRealSourceIDs.delete(src.id);
+      this.idSources.delete(src.id);
+      this.sources.delete(src);
+      sub.unsubscribe();
+      return true;
+    }
+
+    return false;
+  }
+
+  removeID(id) {
+    const src = this.getSourceForID(id);
+    return src ? this.remove(src) : false;
+  }
+
+  removeAll(src) {
+    // pre-remove all source ids for partitionSync
+    for (let s of src) {
+      this.sourceIDs.delete(this.invRealSourceIDs.get(s.id));
+    }
+
+    let ok = true;
+
+    for (let s of src) {
+      ok = this.remove(s) && ok;
+    }
+
+    return ok;
+  }
+
+  removeAllIDs(ids) {
+    let ok = true;
+
+    for (let id of ids) {
+      ok = this.removeID(id) && ok;
+    }
+
+    return ok;
+  }
+
+  getSourceForID(id) {
+    return this.idSources.get(this.realSourceIDs.get(id));
+  }
+
+  getSources() {
+    const res = {};
+
+    for (let [id, src] of this.idSources) {
+      res[this.invRealSourceIDs.get(id)] = src;
+    }
+
+    return res;
+  }
+
+  unsubscribe(sub) {
+    if (!sub) {
+      for (let s of this.sources.values()) {
+        s.unsubscribe();
+      }
+
+      this.state = 2
+      /* DONE */
+      ;
+      this.sources.clear();
+      this.sourceIDs.clear();
+      this.realSourceIDs.clear();
+      this.invRealSourceIDs.clear();
+      this.idSources.clear();
+    }
+
+    return super.unsubscribe(sub);
+  }
+
+  markDone(src) {
+    this.remove(src);
+
+    if (this.closeIn === 1
+    /* FIRST */
+    || this.closeIn === 2
+    /* LAST */
+    && !this.sources.size) {
+      this.done();
+    }
+  }
+
+}
+
+exports.StreamSync = StreamSync;
+},{"@thi.ng/checks":"node_modules/@thi.ng/checks/index.js","@thi.ng/transducers":"node_modules/@thi.ng/transducers/index.js","./api":"node_modules/@thi.ng/rstream/api.js","./subscription":"node_modules/@thi.ng/rstream/subscription.js","./utils/idgen":"node_modules/@thi.ng/rstream/utils/idgen.js"}],"node_modules/@thi.ng/rstream/utils/worker.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.makeWorker = exports.inlineWorker = void 0;
+
+const inlineWorker = src => makeWorker(new Blob([src], {
+  type: "text/javascript"
+}));
+
+exports.inlineWorker = inlineWorker;
+
+const makeWorker = worker => worker instanceof Worker ? worker : new Worker(worker instanceof Blob ? URL.createObjectURL(worker) : worker);
+
+exports.makeWorker = makeWorker;
+},{}],"node_modules/@thi.ng/rstream/subs/tunnel.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Tunnel = exports.tunnel = void 0;
+
+var _api = require("../api");
+
+var _subscription = require("../subscription");
+
+var _idgen = require("../utils/idgen");
+
+var _worker = require("../utils/worker");
+
+/**
+ * Returns a {@link Subscription} which processes received values via
+ * the configured worker(s) and then passes values received back from
+ * the worker(s) downstream, thereby allowing workers to be used
+ * transparently for stream processing.
+ *
+ * @remarks
+ * Multiple worker instances are supported for concurrent processing.
+ * See the {@link TunnelOpts} for details.
+ *
+ * Also see {@link forkJoin} and {@link postWorker}.
+ *
+ * @param opts
+ */
+const tunnel = opts => new Tunnel(opts);
+
+exports.tunnel = tunnel;
+
+class Tunnel extends _subscription.Subscription {
+  constructor(opts) {
+    super(undefined, {
+      id: opts.id || `tunnel-${(0, _idgen.nextID)()}`
+    });
+    this.src = opts.src;
+    this.workers = new Array(opts.maxWorkers || 1);
+    this.transferables = opts.transferables;
+    this.terminate = opts.terminate || 1000;
+    this.interrupt = opts.interrupt || false;
+    this.index = 0;
+  }
+
+  next(x) {
+    if (this.state < 2
+    /* DONE */
+    ) {
+        let tx;
+
+        if (this.transferables) {
+          tx = this.transferables(x);
+        }
+
+        let worker = this.workers[this.index];
+
+        if (this.interrupt && worker) {
+          worker.terminate();
+          worker = null;
+        }
+
+        if (!worker) {
+          this.workers[this.index++] = worker = (0, _worker.makeWorker)(this.src);
+          this.index %= this.workers.length;
+          worker.addEventListener("message", e => this.dispatch(e.data));
+          worker.addEventListener("error", e => this.error(e));
+        }
+
+        worker.postMessage(x, tx || []);
+      }
+  }
+
+  done() {
+    super.done();
+
+    if (this.terminate > 0) {
+      setTimeout(() => {
+        _api.LOGGER.info("terminating workers...");
+
+        this.workers.forEach(worker => worker && worker.terminate());
+        delete this.workers;
+      }, this.terminate);
+    }
+  }
+
+}
+
+exports.Tunnel = Tunnel;
+},{"../api":"node_modules/@thi.ng/rstream/api.js","../subscription":"node_modules/@thi.ng/rstream/subscription.js","../utils/idgen":"node_modules/@thi.ng/rstream/utils/idgen.js","../utils/worker":"node_modules/@thi.ng/rstream/utils/worker.js"}],"node_modules/@thi.ng/rstream/forkjoin.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.joinBuffer = exports.forkBuffer = exports.forkJoin = void 0;
+
+var _transducers = require("@thi.ng/transducers");
+
+var _streamSync = require("./stream-sync");
+
+var _tunnel = require("./subs/tunnel");
+
+/**
+ * Returns a {@link StreamSync} instance which creates & attaches
+ * multiple subscriptions to given `src` input stream, processes each
+ * received value in parallel via web workers, then recombines partial
+ * results and passes the resulting transformed value downstream.
+ *
+ * @remarks
+ * See {@link ForkJoinOpts} for further details & behavior options and
+ * the {@link forkBuffer} and {@link joinBuffer} helpers for array-based
+ * value processing (most likely use case).
+ *
+ * @param src input stream
+ * @param opts
+ */
+const forkJoin = opts => {
+  const numWorkers = opts.numWorkers || navigator.hardwareConcurrency || 4;
+  const workerIDs = (0, _transducers.range)(numWorkers);
+  return (0, _streamSync.sync)({
+    src: [...(0, _transducers.map)(id => opts.src.transform((0, _transducers.map)(x => opts.fork(id, numWorkers, x))).subscribe((0, _tunnel.tunnel)({
+      src: opts.worker,
+      transferables: opts.transferables,
+      interrupt: opts.interrupt === true,
+      terminate: opts.terminate,
+      id: String(id)
+    })), workerIDs)],
+    xform: (0, _transducers.comp)( // form result tuple in original order
+    (0, _transducers.map)(results => [...(0, _transducers.map)(id => results[id], workerIDs)]), // apply user join function
+    (0, _transducers.map)(opts.join)),
+    reset: true,
+    backPressure: opts.backPressure
+  });
+};
+/**
+ * Higher-order fork function for scenarios involving the split-parallel
+ * processing of a large buffer.
+ *
+ * @remarks
+ * The returned function is meant to be used as `fork` function in a
+ * {@link ForkJoinOpts} config and extracts a workload slice of the
+ * original buffer for a single worker. The HOF itself takes a minimum
+ * chunk size as optional parameter (default: 1).
+ *
+ * **Note:** Depending on the configured `minChunkSize` and the size of
+ * the input buffer to be partitioned, the returned fork function might
+ * produce empty sub-arrays for some workers, iff the configured number
+ * of workers exceeds the resulting number of chunks / input values.
+ * E.g. If the number of workers = 8, buffer size = 10 and min chunk
+ * size = 2, then the last 3 (i.e. 8 - 10 / 2) workers will only receive
+ * empty workloads.
+ *
+ * More generally, if the input buffer size is not equally distributable
+ * over the given number of workers, the last worker(s) might receive a
+ * larger, smaller or empty chunk.
+ *
+ * Also see {@link forkJoin} and {@link joinBuffer}.
+ *
+ * @example
+ * ```ts
+ * forkJoin<number[], number[], number[], number[]>({
+ *     src,
+ *     // job definition / split buffer into chunks (min size 256 values)
+ *     fork: forkBuffer(256),
+ *     // re-join partial results
+ *     join: joinBuffer(),
+ *     worker: "./worker.js",
+ * })
+ * ```
+ *
+ * @param minChunkSize
+ */
+
+
+exports.forkJoin = forkJoin;
+
+const forkBuffer = (minChunkSize = 1) => (id, numWorkers, buf) => {
+  const chunkSize = Math.max(minChunkSize, buf.length / numWorkers | 0);
+  return id < numWorkers - 1 ? buf.slice(id * chunkSize, (id + 1) * chunkSize) : buf.slice(id * chunkSize);
+};
+/**
+ * Higher-order join function for scenarios involving the split-parallel
+ * processing of a large buffer.
+ *
+ * @remarks
+ * The returned function is meant to be used as `join` function in a
+ * {@link ForkJoinOpts} config, receives the processed result chunks
+ * from all workers (ordered by worker ID) and concatenates them back
+ * into a single result array.
+ *
+ * The optional `fn` arg can be used to pick the actual result chunk
+ * from each worker result. This is useful if the worker result type is
+ * not an array and includes other data points (e.g. execution metrics
+ * etc.). If `fn` is not given, it defaults to the identity function
+ * (i.e. each worker's result is assumed to be an array).
+ *
+ * Also see {@link forkJoin} and {@link forkBuffer}.
+ *
+ * @param fn
+ */
+
+
+exports.forkBuffer = forkBuffer;
+
+const joinBuffer = fn => fn ? parts => [...(0, _transducers.mapcat)(fn, parts)] : parts => Array.prototype.concat.apply([], parts);
+
+exports.joinBuffer = joinBuffer;
+},{"@thi.ng/transducers":"node_modules/@thi.ng/transducers/index.js","./stream-sync":"node_modules/@thi.ng/rstream/stream-sync.js","./subs/tunnel":"node_modules/@thi.ng/rstream/subs/tunnel.js"}],"node_modules/@thi.ng/rstream/metastream.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MetaStream = exports.metaStream = void 0;
+
+var _api = require("@thi.ng/api");
+
+var _subscription = require("./subscription");
+
+var _idgen = require("./utils/idgen");
+
+/**
+ * Returns a {@link Subscription} which transforms each incoming value
+ * into a new {@link Stream}, subscribes to it (via an hidden / internal
+ * subscription) and then only passes values from that stream to its own
+ * subscribers.
+ *
+ * @remarks
+ * If a new value is received, the metastream first unsubscribes from
+ * any still active stream, before creating and subscribing to the new
+ * stream. Hence this stream type is useful for cases where streams need
+ * to be dynamically created & inserted into an existing dataflow
+ * topology.
+ *
+ * The user supplied `factory` function will be called for each incoming
+ * value and is responsible for creating the new stream instances. If
+ * the function returns null/undefined, no further action will be taken
+ * (acts like a filter transducer).
+ *
+ * The factory function does NOT need to create *new* streams, but can
+ * merely return other existing streams, and so making the meta stream
+ * act like a switch with arbitrary criteria.
+ *
+ * If the meta stream itself is the only subscriber to existing input
+ * streams, you'll need to configure the input's
+ * {@link CommonOpts.closeOut} option to keep them alive and support
+ * dynamic switching between them.
+ *
+ * @example
+ * ```ts
+ * // transform each received odd number into a stream
+ * // producing 3 copies of that number in the metastream
+ * // even numbers are ignored
+ * a = metastream(
+ *   (x) => (x & 1)
+ *     ? fromIterable(tx.repeat(x, 3), { delay: 100 })
+ *     : null
+ * );
+ *
+ * a.subscribe(trace())
+ * a.next(23)
+ *
+ * // 23
+ * // 23
+ * // 23
+ *
+ * a.next(42) // ignored by factory fn
+ *
+ * a.next(43)
+ * // 43
+ * // 43
+ * // 43
+ * ```
+ *
+ * @example
+ * ```ts
+ * // infinite inputs
+ * a = fromIterable(
+ *   tx.repeat("a"),
+ *   { delay: 1000, closeOut: CloseMode.NEVER }
+ * );
+ * b = fromIterable(
+ *   tx.repeat("b"),
+ *   { delay: 1000, closeOut: CloseMode.NEVER }
+ * );
+ *
+ * // stream selector / switch
+ * m = metaStream((x) => x ? a : b);
+ * m.subscribe(trace("meta from: "));
+ *
+ * m.next(true);
+ * // meta from: a
+ *
+ * m.next(false);
+ * // meta from: b
+ *
+ * m.next(true);
+ * // meta from: a
+ * ```
+ *
+ * @param factory
+ * @param id
+ */
+const metaStream = (factory, opts) => new MetaStream(factory, opts);
+
+exports.metaStream = metaStream;
+
+class MetaStream extends _subscription.Subscription {
+  constructor(factory, opts) {
+    super(undefined, (0, _idgen.optsWithID)("metastram", opts));
+    this.factory = factory;
+  }
+
+  next(x) {
+    if (this.state < 2
+    /* DONE */
+    ) {
+        if (this.stream) {
+          this.stream.unsubscribe(this.sub);
+        }
+
+        let stream = this.factory(x);
+
+        if (stream) {
+          this.stream = stream;
+          this.sub = this.stream.subscribe({
+            next: x => {
+              stream === this.stream && super.dispatch(x);
+            },
+            done: () => {
+              this.stream.unsubscribe(this.sub);
+
+              if (stream === this.stream) {
+                this.stream = undefined;
+                this.sub = undefined;
+              }
+            },
+            error: e => super.error(e),
+            __owner: this
+          });
+        }
+      }
+  }
+
+  done() {
+    if (this.stream) {
+      this.detach();
+    }
+
+    super.done();
+  }
+
+  unsubscribe(sub) {
+    if (this.stream && (!sub || this.subs.length === 1)) {
+      this.detach();
+    }
+
+    return super.unsubscribe();
+  }
+
+  detach() {
+    (0, _api.assert)(!!this.stream, "input stream already removed");
+    this.stream.unsubscribe(this.sub);
+    delete this.stream;
+    delete this.sub;
+  }
+
+}
+
+exports.MetaStream = MetaStream;
+},{"@thi.ng/api":"node_modules/@thi.ng/api/index.js","./subscription":"node_modules/@thi.ng/rstream/subscription.js","./utils/idgen":"node_modules/@thi.ng/rstream/utils/idgen.js"}],"node_modules/@thi.ng/associative/dissoc.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.dissoc = dissoc;
+exports.dissocObj = void 0;
+
+function dissoc(coll, keys) {
+  for (let k of keys) {
+    coll.delete(k);
+  }
+
+  return coll;
+}
+
+const dissocObj = (obj, keys) => {
+  for (let k of keys) {
+    delete obj[k];
+  }
+
+  return obj;
+};
+
+exports.dissocObj = dissocObj;
+},{}],"node_modules/@thi.ng/associative/internal/equiv.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.equivSet = exports.equivMap = void 0;
+
+var _equiv = require("@thi.ng/equiv");
+
+const equivMap = (a, b) => {
+  if (a === b) {
+    return true;
+  }
+
+  if (!(b instanceof Map) || a.size !== b.size) {
+    return false;
+  }
+
+  for (let p of a.entries()) {
+    if (!(0, _equiv.equiv)(b.get(p[0]), p[1])) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+exports.equivMap = equivMap;
+
+const equivSet = (a, b) => {
+  if (a === b) {
+    return true;
+  }
+
+  if (!(b instanceof Set) || a.size !== b.size) {
+    return false;
+  }
+
+  for (let k of a.keys()) {
+    if (!b.has(k)) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+exports.equivSet = equivSet;
+},{"@thi.ng/equiv":"node_modules/@thi.ng/equiv/index.js"}],"node_modules/@thi.ng/associative/into.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.into = into;
+
+var _checks = require("@thi.ng/checks");
+
+function into(dest, src) {
+  if ((0, _checks.isMap)(dest)) {
+    for (let x of src) {
+      dest.set(x[0], x[1]);
+    }
+  } else {
+    for (let x of src) {
+      dest.add(x);
+    }
+  }
+
+  return dest;
+}
+},{"@thi.ng/checks":"node_modules/@thi.ng/checks/index.js"}],"node_modules/@thi.ng/associative/array-set.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ArraySet = void 0;
+
+var _api = require("@thi.ng/api");
+
+var _equiv = require("@thi.ng/equiv");
+
+var _dissoc = require("./dissoc");
+
+var _equiv2 = require("./internal/equiv");
+
+var _into = require("./into");
+
+const __private = new WeakMap();
+
+const __vals = inst => __private.get(inst).vals;
+/**
+ * An alternative set implementation to the native ES6 Set type. Uses
+ * customizable equality/equivalence predicate and so is more useful
+ * when dealing with structured data. Implements full API of native Set
+ * and by the default uses `@thi.ng/equiv` for equivalence checking.
+ *
+ * Additionally, the type also implements the `ICopy`, `IEmpty` and
+ * `IEquiv` interfaces itself.
+ */
+
+
+class ArraySet extends Set {
+  constructor(vals, opts = {}) {
+    super();
+
+    __private.set(this, {
+      equiv: opts.equiv || _equiv.equiv,
+      vals: []
+    });
+
+    vals && this.into(vals);
+  }
+
+  *[Symbol.iterator]() {
+    yield* __vals(this);
+  }
+
+  get [Symbol.species]() {
+    return ArraySet;
+  }
+
+  get [Symbol.toStringTag]() {
+    return "ArraySet";
+  }
+
+  get size() {
+    return __vals(this).length;
+  }
+
+  copy() {
+    const $this = __private.get(this);
+
+    const s = new ArraySet(null, {
+      equiv: $this.equiv
+    });
+    __private.get(s).vals = $this.vals.slice();
+    return s;
+  }
+
+  empty() {
+    return new ArraySet(null, this.opts());
+  }
+
+  clear() {
+    __vals(this).length = 0;
+  }
+
+  first() {
+    if (this.size) {
+      return __vals(this)[0];
+    }
+  }
+
+  add(key) {
+    !this.has(key) && __vals(this).push(key);
+    return this;
+  }
+
+  into(keys) {
+    return (0, _into.into)(this, keys);
+  }
+
+  has(key) {
+    return this.get(key, _api.SEMAPHORE) !== _api.SEMAPHORE;
+  }
+  /**
+   * Returns the canonical value for `x`, if present. If the set
+   * contains no equivalent for `x`, returns `notFound`.
+   *
+   * @param key
+   * @param notFound
+   */
+
+
+  get(key, notFound) {
+    const $this = __private.get(this);
+
+    const eq = $this.equiv;
+    const vals = $this.vals;
+
+    for (let i = vals.length; --i >= 0;) {
+      if (eq(vals[i], key)) {
+        return vals[i];
+      }
+    }
+
+    return notFound;
+  }
+
+  delete(key) {
+    const $this = __private.get(this);
+
+    const eq = $this.equiv;
+    const vals = $this.vals;
+
+    for (let i = vals.length; --i >= 0;) {
+      if (eq(vals[i], key)) {
+        vals.splice(i, 1);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  disj(keys) {
+    return (0, _dissoc.dissoc)(this, keys);
+  }
+
+  equiv(o) {
+    return (0, _equiv2.equivSet)(this, o);
+  }
+
+  forEach(fn, thisArg) {
+    const vals = __vals(this);
+
+    for (let i = vals.length; --i >= 0;) {
+      const v = vals[i];
+      fn.call(thisArg, v, v, this);
+    }
+  }
+
+  *entries() {
+    for (let v of __vals(this)) {
+      yield [v, v];
+    }
+  }
+
+  *keys() {
+    yield* __vals(this);
+  }
+
+  *values() {
+    yield* __vals(this);
+  }
+
+  opts() {
+    return {
+      equiv: __private.get(this).equiv
+    };
+  }
+
+}
+
+exports.ArraySet = ArraySet;
+},{"@thi.ng/api":"node_modules/@thi.ng/api/index.js","@thi.ng/equiv":"node_modules/@thi.ng/equiv/index.js","./dissoc":"node_modules/@thi.ng/associative/dissoc.js","./internal/equiv":"node_modules/@thi.ng/associative/internal/equiv.js","./into":"node_modules/@thi.ng/associative/into.js"}],"node_modules/@thi.ng/associative/common-keys.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.commonKeysObj = exports.commonKeysMap = void 0;
+
+/**
+ * Like `commonKeysObj()`, but for ES6 Maps.
+ *
+ * @param a
+ * @param b
+ * @param out
+ */
+const commonKeysMap = (a, b, out = []) => {
+  for (let k of a.keys()) {
+    b.has(k) && out.push(k);
+  }
+
+  return out;
+};
+/**
+ * Returns array of keys present in both args, i.e. the set intersection
+ * of the given objects' key / property sets.
+ *
+ * ```
+ * commonKeys({ a: 1, b: 2 }, { c: 10, b: 20, a: 30 })
+ * // [ "a", "b" ]
+ * ```
+ *
+ * @param a
+ * @param b
+ * @param out
+ */
+
+
+exports.commonKeysMap = commonKeysMap;
+
+const commonKeysObj = (a, b, out = []) => {
+  for (let k in a) {
+    b.hasOwnProperty(k) && out.push(k);
+  }
+
+  return out;
+};
+
+exports.commonKeysObj = commonKeysObj;
+},{}],"node_modules/@thi.ng/associative/utils.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -16059,1053 +17105,7 @@ Object.keys(_withoutKeys).forEach(function (key) {
     }
   });
 });
-},{"./array-set":"node_modules/@thi.ng/associative/array-set.js","./common-keys":"node_modules/@thi.ng/associative/common-keys.js","./difference":"node_modules/@thi.ng/associative/difference.js","./dissoc":"node_modules/@thi.ng/associative/dissoc.js","./equiv-map":"node_modules/@thi.ng/associative/equiv-map.js","./hash-map":"node_modules/@thi.ng/associative/hash-map.js","./indexed":"node_modules/@thi.ng/associative/indexed.js","./intersection":"node_modules/@thi.ng/associative/intersection.js","./into":"node_modules/@thi.ng/associative/into.js","./invert":"node_modules/@thi.ng/associative/invert.js","./join":"node_modules/@thi.ng/associative/join.js","./ll-set":"node_modules/@thi.ng/associative/ll-set.js","./merge-apply":"node_modules/@thi.ng/associative/merge-apply.js","./merge-deep":"node_modules/@thi.ng/associative/merge-deep.js","./merge-with":"node_modules/@thi.ng/associative/merge-with.js","./merge":"node_modules/@thi.ng/associative/merge.js","./rename-keys":"node_modules/@thi.ng/associative/rename-keys.js","./select-keys":"node_modules/@thi.ng/associative/select-keys.js","./sorted-map":"node_modules/@thi.ng/associative/sorted-map.js","./sorted-set":"node_modules/@thi.ng/associative/sorted-set.js","./sparse-set":"node_modules/@thi.ng/associative/sparse-set.js","./union":"node_modules/@thi.ng/associative/union.js","./without-keys":"node_modules/@thi.ng/associative/without-keys.js"}],"node_modules/@thi.ng/rstream/api.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.setLogger = exports.LOGGER = exports.CloseMode = exports.State = void 0;
-
-var _api = require("@thi.ng/api");
-
-var State;
-exports.State = State;
-
-(function (State) {
-  State[State["IDLE"] = 0] = "IDLE";
-  State[State["ACTIVE"] = 1] = "ACTIVE";
-  State[State["DONE"] = 2] = "DONE";
-  State[State["ERROR"] = 3] = "ERROR";
-  State[State["DISABLED"] = 4] = "DISABLED"; // TODO currently unused
-})(State || (exports.State = State = {}));
-/**
- * Closing behaviors.
- */
-
-
-var CloseMode;
-exports.CloseMode = CloseMode;
-
-(function (CloseMode) {
-  /**
-   * Never close, even if no more inputs/outputs.
-   */
-  CloseMode[CloseMode["NEVER"] = 0] = "NEVER";
-  /**
-   * Close when first input/output is done / removed.
-   */
-
-  CloseMode[CloseMode["FIRST"] = 1] = "FIRST";
-  /**
-   * Close when last input/output is done / removed.
-   */
-
-  CloseMode[CloseMode["LAST"] = 2] = "LAST";
-})(CloseMode || (exports.CloseMode = CloseMode = {}));
-
-let LOGGER = _api.NULL_LOGGER;
-exports.LOGGER = LOGGER;
-
-const setLogger = logger => exports.LOGGER = LOGGER = logger;
-
-exports.setLogger = setLogger;
-},{"@thi.ng/api":"node_modules/@thi.ng/api/index.js"}],"node_modules/@thi.ng/rstream/utils/idgen.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.optsWithID = exports.nextID = void 0;
-let NEXT_ID = 0;
-
-const nextID = () => NEXT_ID++;
-
-exports.nextID = nextID;
-
-const optsWithID = (prefix, opts) => !opts || !opts.id ? Object.assign(Object.assign({}, opts), {
-  id: prefix + "-" + nextID()
-}) : opts;
-
-exports.optsWithID = optsWithID;
-},{}],"node_modules/@thi.ng/rstream/subscription.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Subscription = exports.subscription = void 0;
-
-var _api = require("@thi.ng/api");
-
-var _arrays = require("@thi.ng/arrays");
-
-var _checks = require("@thi.ng/checks");
-
-var _errors = require("@thi.ng/errors");
-
-var _transducers = require("@thi.ng/transducers");
-
-var _api2 = require("./api");
-
-var _idgen = require("./utils/idgen");
-
-/**
- * Creates a new {@link Subscription} instance, the fundamental datatype
- * and building block provided by this package.
- *
- * @remarks
- * Most other types in rstream, including {@link Stream}s, are
- * `Subscription`s and all can be:
- *
- * - linked into directed graphs (sync or async & not necessarily DAGs)
- * - transformed using transducers (incl. support for early termination)
- * - can have any number of subscribers (optionally each w/ their own
- *   transducers)
- * - recursively unsubscribe themselves from parent after their last
- *   subscriber unsubscribed (configurable)
- * - will go into a non-recoverable error state if none of the
- *   subscribers has an error handler itself
- * - implement the {@link @thi.ng/api#IDeref} interface
- *
- * Subscription behavior can be customized via the additional (optional)
- * options arg. See `CommonOpts` and `SubscriptionOpts` for further
- * details.
- *
- * @example
- * ```ts
- * // as reactive value mechanism (same as with stream() above)
- * s = subscription();
- * s.subscribe(trace("s1"));
- * s.subscribe(trace("s2"), { xform: tx.filter((x) => x > 25) });
- *
- * // external trigger
- * s.next(23);
- * // s1 23
- * s.next(42);
- * // s1 42
- * // s2 42
- * ```
- *
- * @param sub
- * @param opts
- */
-const subscription = (sub, opts) => new Subscription(sub, opts);
-
-exports.subscription = subscription;
-
-class Subscription {
-  constructor(sub, opts = {}) {
-    this.state = 0
-    /* IDLE */
-    ;
-    this.parent = opts.parent;
-    this.closeIn = opts.closeIn !== undefined ? opts.closeIn : 2
-    /* LAST */
-    ;
-    this.closeOut = opts.closeOut !== undefined ? opts.closeOut : 2
-    /* LAST */
-    ;
-    this.cacheLast = opts.cache !== false;
-    this.id = opts.id || `sub-${(0, _idgen.nextID)()}`;
-    this.last = _api.SEMAPHORE;
-    this.subs = [];
-
-    if (sub) {
-      this.subs.push(sub);
-    }
-
-    if (opts.xform) {
-      this.xform = opts.xform((0, _transducers.push)());
-    }
-  }
-
-  deref() {
-    return this.last !== _api.SEMAPHORE ? this.last : undefined;
-  }
-
-  getState() {
-    return this.state;
-  }
-
-  subscribe(...args) {
-    this.ensureState();
-    let sub;
-    let opts = args.length > 1 && (0, _checks.isPlainObject)((0, _arrays.peek)(args)) ? Object.assign({}, args.pop()) : {};
-
-    switch (args.length) {
-      case 1:
-        if ((0, _checks.isFunction)(args[0])) {
-          opts.xform = args[0];
-          !opts.id && (opts.id = `xform-${(0, _idgen.nextID)()}`);
-        } else {
-          sub = args[0];
-        }
-
-        break;
-
-      case 2:
-        sub = args[0];
-        opts.xform = args[1];
-        break;
-
-      default:
-        (0, _errors.illegalArity)(args.length);
-    }
-
-    if ((0, _checks.implementsFunction)(sub, "subscribe")) {
-      sub.parent = this;
-    } else {
-      // FIXME inherit options from this sub or defaults?
-      sub = subscription(sub, Object.assign({
-        parent: this
-      }, opts));
-    }
-
-    this.last !== _api.SEMAPHORE && sub.next(this.last);
-    return this.addWrapped(sub);
-  }
-  /**
-   * Returns array of new child subscriptions for all given
-   * subscribers.
-   *
-   * @param subs
-   */
-
-
-  subscribeAll(...subs) {
-    const wrapped = [];
-
-    for (let s of subs) {
-      wrapped.push(this.subscribe(s));
-    }
-
-    return wrapped;
-  }
-
-  transform(...xf) {
-    const n = xf.length - 1;
-    return (0, _checks.isPlainObject)(xf[n]) ? this.subscribe((0, _transducers.comp)(...xf.slice(0, n)), xf[n]) : this.subscribe((0, _transducers.comp)(...xf));
-  }
-  /**
-   * If called without arg, removes this subscription from parent (if
-   * any), cleans up internal state and goes into DONE state. If
-   * called with arg, removes the sub from internal pool and if no
-   * other subs are remaining also cleans up itself and goes into DONE
-   * state.
-   *
-   * @param sub
-   */
-
-
-  unsubscribe(sub) {
-    _api2.LOGGER.debug(this.id, "unsub start", sub ? sub.id : "self");
-
-    if (!sub) {
-      let res = true;
-
-      if (this.parent) {
-        res = this.parent.unsubscribe(this);
-      }
-
-      this.state = 2
-      /* DONE */
-      ;
-      this.cleanup();
-      return res;
-    }
-
-    if (this.subs) {
-      _api2.LOGGER.debug(this.id, "unsub child", sub.id);
-
-      const idx = this.subs.indexOf(sub);
-
-      if (idx >= 0) {
-        this.subs.splice(idx, 1);
-
-        if (this.closeOut === 1
-        /* FIRST */
-        || !this.subs.length && this.closeOut !== 0
-        /* NEVER */
-        ) {
-          this.unsubscribe();
-        }
-
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  next(x) {
-    if (this.state < 2
-    /* DONE */
-    ) {
-        if (this.xform) {
-          const acc = this.xform[2]([], x);
-          const uacc = (0, _transducers.unreduced)(acc);
-          const n = uacc.length;
-
-          for (let i = 0; i < n; i++) {
-            this.dispatch(uacc[i]);
-          }
-
-          if ((0, _transducers.isReduced)(acc)) {
-            this.done();
-          }
-        } else {
-          this.dispatch(x);
-        }
-      }
-  }
-
-  done() {
-    _api2.LOGGER.debug(this.id, "entering done()");
-
-    if (this.state < 2
-    /* DONE */
-    ) {
-        if (this.xform) {
-          const acc = this.xform[1]([]);
-          const uacc = (0, _transducers.unreduced)(acc);
-          const n = uacc.length;
-
-          for (let i = 0; i < n; i++) {
-            this.dispatch(uacc[i]);
-          }
-        }
-
-        this.state = 2
-        /* DONE */
-        ;
-
-        for (let s of [...this.subs]) {
-          try {
-            s.done && s.done();
-          } catch (e) {
-            s.error ? s.error(e) : this.error(e);
-          }
-        }
-
-        this.unsubscribe();
-
-        _api2.LOGGER.debug(this.id, "exiting done()");
-      }
-  }
-
-  error(e) {
-    this.state = 3
-    /* ERROR */
-    ;
-    let notified = false;
-
-    if (this.subs && this.subs.length) {
-      for (let s of this.subs.slice()) {
-        if (s.error) {
-          s.error(e);
-          notified = true;
-        }
-      }
-    }
-
-    if (!notified) {
-      _api2.LOGGER.warn(this.id, "unhandled error:", e);
-
-      if (this.parent) {
-        _api2.LOGGER.debug(this.id, "unsubscribing...");
-
-        this.unsubscribe();
-        this.state = 3
-        /* ERROR */
-        ;
-      }
-    }
-  }
-
-  addWrapped(wrapped) {
-    this.subs.push(wrapped);
-    this.state = 1
-    /* ACTIVE */
-    ;
-    return wrapped;
-  }
-
-  dispatch(x) {
-    // LOGGER.debug(this.id, "dispatch", x);
-    this.cacheLast && (this.last = x);
-    const subs = this.subs;
-    let s;
-
-    if (subs.length === 1) {
-      s = subs[0];
-
-      try {
-        s.next && s.next(x);
-      } catch (e) {
-        s.error ? s.error(e) : this.error(e);
-      }
-    } else {
-      for (let i = subs.length; --i >= 0;) {
-        s = subs[i];
-
-        try {
-          s.next && s.next(x);
-        } catch (e) {
-          s.error ? s.error(e) : this.error(e);
-        }
-      }
-    }
-  }
-
-  ensureState() {
-    if (this.state >= 2
-    /* DONE */
-    ) {
-        (0, _errors.illegalState)(`operation not allowed in state ${this.state}`);
-      }
-  }
-
-  cleanup() {
-    _api2.LOGGER.debug(this.id, "cleanup");
-
-    this.subs.length = 0;
-    delete this.parent;
-    delete this.xform;
-    delete this.last;
-  }
-
-}
-
-exports.Subscription = Subscription;
-},{"@thi.ng/api":"node_modules/@thi.ng/api/index.js","@thi.ng/arrays":"node_modules/@thi.ng/arrays/index.js","@thi.ng/checks":"node_modules/@thi.ng/checks/index.js","@thi.ng/errors":"node_modules/@thi.ng/errors/index.js","@thi.ng/transducers":"node_modules/@thi.ng/transducers/index.js","./api":"node_modules/@thi.ng/rstream/api.js","./utils/idgen":"node_modules/@thi.ng/rstream/utils/idgen.js"}],"node_modules/@thi.ng/rstream/stream-sync.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.StreamSync = exports.sync = void 0;
-
-var _checks = require("@thi.ng/checks");
-
-var _transducers = require("@thi.ng/transducers");
-
-var _api = require("./api");
-
-var _subscription = require("./subscription");
-
-var _idgen = require("./utils/idgen");
-
-/**
- * Similar to {@link StreamMerge}, but with extra synchronization of
- * inputs. Before emitting any new values, {@link StreamSync} collects
- * values until at least one has been received from *all* inputs. Once
- * that's the case, the collected values are sent as labeled tuple
- * object to downstream subscribers.
- *
- * @remarks
- * Each value in the emitted tuple objects is stored under their input
- * stream's ID. Only the last value received from each input is passed
- * on. After the initial tuple has been emitted, you can choose from two
- * possible behaviors:
- *
- * 1) Any future change in any input will produce a new result tuple.
- *    These tuples will retain the most recently read values from other
- *    inputs. This behavior is the default and illustrated in the above
- *    schematic.
- * 2) If the `reset` option is `true`, every input will have to provide
- *    at least one new value again until another result tuple is
- *    produced.
- *
- * Any done inputs are automatically removed. By default, `StreamSync`
- * calls {@link ISubscriber.done} when the last active input is done,
- * but this behavior can be overridden via the provided options.
- *
- * Input streams can be added and removed dynamically and the emitted
- * tuple size adjusts to the current number of inputs (the next time a
- * value is received from any input).
- *
- * If the `reset` option is enabled, the last emitted tuple is allowed
- * to be incomplete, by default. To only allow complete tuples, also set
- * the `all` option to `false`.
- *
- * The synchronization is done via the `partitionSync()` transducer from
- * the @thi.ng/transducers package. See this function's docs for further
- * details.
- *
- * @example
- * ```ts
- * const a = rs.stream();
- * const b = rs.stream();
- * s = sync({ src: { a, b } }).subscribe(trace("result: "));
- * a.next(1);
- * b.next(2);
- * // result: { a: 1, b: 2 }
- * ```
- *
- * @see StreamSyncOpts
- *
- * @param opts
- */
-const sync = opts => new StreamSync(opts);
-
-exports.sync = sync;
-
-class StreamSync extends _subscription.Subscription {
-  constructor(opts) {
-    const srcIDs = new Set();
-    const psync = (0, _transducers.partitionSync)(srcIDs, {
-      key: x => x[0],
-      mergeOnly: opts.mergeOnly === true,
-      reset: opts.reset === true,
-      all: opts.all !== false,
-      backPressure: opts.backPressure || 0
-    });
-    const mapv = (0, _transducers.mapVals)(x => x[1]);
-    super(undefined, (0, _idgen.optsWithID)("streamsync", Object.assign(Object.assign({}, opts), {
-      xform: opts.xform ? (0, _transducers.comp)(psync, mapv, opts.xform) : (0, _transducers.comp)(psync, mapv)
-    })));
-    this.sources = new Map();
-    this.realSourceIDs = new Map();
-    this.invRealSourceIDs = new Map();
-    this.idSources = new Map();
-    this.sourceIDs = srcIDs;
-    opts.src && this.addAll(opts.src);
-  }
-
-  add(src, id) {
-    id || (id = src.id);
-    this.ensureState();
-    this.sourceIDs.add(id);
-    this.realSourceIDs.set(id, src.id);
-    this.invRealSourceIDs.set(src.id, id);
-    this.idSources.set(src.id, src);
-    this.sources.set(src, src.subscribe({
-      next: x => {
-        if (x[1] instanceof _subscription.Subscription) {
-          this.add(x[1]);
-        } else {
-          this.next(x);
-        }
-      },
-      done: () => this.markDone(src),
-      __owner: this
-    }, (0, _transducers.labeled)(id), {
-      id: `in-${id}`
-    }));
-  }
-
-  addAll(src) {
-    if ((0, _checks.isPlainObject)(src)) {
-      // pre-add all source ids for partitionSync
-      for (let id in src) {
-        this.sourceIDs.add(id);
-      }
-
-      for (let id in src) {
-        this.add(src[id], id);
-      }
-    } else {
-      // pre-add all source ids for partitionSync
-      for (let s of src) {
-        this.sourceIDs.add(s.id);
-      }
-
-      for (let s of src) {
-        this.add(s);
-      }
-    }
-  }
-
-  remove(src) {
-    const sub = this.sources.get(src);
-
-    if (sub) {
-      const id = this.invRealSourceIDs.get(src.id);
-
-      _api.LOGGER.info(`removing src: ${src.id} (${id})`);
-
-      this.sourceIDs.delete(id);
-      this.realSourceIDs.delete(id);
-      this.invRealSourceIDs.delete(src.id);
-      this.idSources.delete(src.id);
-      this.sources.delete(src);
-      sub.unsubscribe();
-      return true;
-    }
-
-    return false;
-  }
-
-  removeID(id) {
-    const src = this.getSourceForID(id);
-    return src ? this.remove(src) : false;
-  }
-
-  removeAll(src) {
-    // pre-remove all source ids for partitionSync
-    for (let s of src) {
-      this.sourceIDs.delete(this.invRealSourceIDs.get(s.id));
-    }
-
-    let ok = true;
-
-    for (let s of src) {
-      ok = this.remove(s) && ok;
-    }
-
-    return ok;
-  }
-
-  removeAllIDs(ids) {
-    let ok = true;
-
-    for (let id of ids) {
-      ok = this.removeID(id) && ok;
-    }
-
-    return ok;
-  }
-
-  getSourceForID(id) {
-    return this.idSources.get(this.realSourceIDs.get(id));
-  }
-
-  getSources() {
-    const res = {};
-
-    for (let [id, src] of this.idSources) {
-      res[this.invRealSourceIDs.get(id)] = src;
-    }
-
-    return res;
-  }
-
-  unsubscribe(sub) {
-    if (!sub) {
-      for (let s of this.sources.values()) {
-        s.unsubscribe();
-      }
-
-      this.state = 2
-      /* DONE */
-      ;
-      this.sources.clear();
-      this.sourceIDs.clear();
-      this.realSourceIDs.clear();
-      this.invRealSourceIDs.clear();
-      this.idSources.clear();
-    }
-
-    return super.unsubscribe(sub);
-  }
-
-  markDone(src) {
-    this.remove(src);
-
-    if (this.closeIn === 1
-    /* FIRST */
-    || this.closeIn === 2
-    /* LAST */
-    && !this.sources.size) {
-      this.done();
-    }
-  }
-
-}
-
-exports.StreamSync = StreamSync;
-},{"@thi.ng/checks":"node_modules/@thi.ng/checks/index.js","@thi.ng/transducers":"node_modules/@thi.ng/transducers/index.js","./api":"node_modules/@thi.ng/rstream/api.js","./subscription":"node_modules/@thi.ng/rstream/subscription.js","./utils/idgen":"node_modules/@thi.ng/rstream/utils/idgen.js"}],"node_modules/@thi.ng/rstream/utils/worker.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.makeWorker = exports.inlineWorker = void 0;
-
-const inlineWorker = src => makeWorker(new Blob([src], {
-  type: "text/javascript"
-}));
-
-exports.inlineWorker = inlineWorker;
-
-const makeWorker = worker => worker instanceof Worker ? worker : new Worker(worker instanceof Blob ? URL.createObjectURL(worker) : worker);
-
-exports.makeWorker = makeWorker;
-},{}],"node_modules/@thi.ng/rstream/subs/tunnel.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Tunnel = exports.tunnel = void 0;
-
-var _api = require("../api");
-
-var _subscription = require("../subscription");
-
-var _idgen = require("../utils/idgen");
-
-var _worker = require("../utils/worker");
-
-/**
- * Returns a {@link Subscription} which processes received values via
- * the configured worker(s) and then passes values received back from
- * the worker(s) downstream, thereby allowing workers to be used
- * transparently for stream processing.
- *
- * @remarks
- * Multiple worker instances are supported for concurrent processing.
- * See the {@link TunnelOpts} for details.
- *
- * Also see {@link forkJoin} and {@link postWorker}.
- *
- * @param opts
- */
-const tunnel = opts => new Tunnel(opts);
-
-exports.tunnel = tunnel;
-
-class Tunnel extends _subscription.Subscription {
-  constructor(opts) {
-    super(undefined, {
-      id: opts.id || `tunnel-${(0, _idgen.nextID)()}`
-    });
-    this.src = opts.src;
-    this.workers = new Array(opts.maxWorkers || 1);
-    this.transferables = opts.transferables;
-    this.terminate = opts.terminate || 1000;
-    this.interrupt = opts.interrupt || false;
-    this.index = 0;
-  }
-
-  next(x) {
-    if (this.state < 2
-    /* DONE */
-    ) {
-        let tx;
-
-        if (this.transferables) {
-          tx = this.transferables(x);
-        }
-
-        let worker = this.workers[this.index];
-
-        if (this.interrupt && worker) {
-          worker.terminate();
-          worker = null;
-        }
-
-        if (!worker) {
-          this.workers[this.index++] = worker = (0, _worker.makeWorker)(this.src);
-          this.index %= this.workers.length;
-          worker.addEventListener("message", e => this.dispatch(e.data));
-          worker.addEventListener("error", e => this.error(e));
-        }
-
-        worker.postMessage(x, tx || []);
-      }
-  }
-
-  done() {
-    super.done();
-
-    if (this.terminate > 0) {
-      setTimeout(() => {
-        _api.LOGGER.info("terminating workers...");
-
-        this.workers.forEach(worker => worker && worker.terminate());
-        delete this.workers;
-      }, this.terminate);
-    }
-  }
-
-}
-
-exports.Tunnel = Tunnel;
-},{"../api":"node_modules/@thi.ng/rstream/api.js","../subscription":"node_modules/@thi.ng/rstream/subscription.js","../utils/idgen":"node_modules/@thi.ng/rstream/utils/idgen.js","../utils/worker":"node_modules/@thi.ng/rstream/utils/worker.js"}],"node_modules/@thi.ng/rstream/forkjoin.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.joinBuffer = exports.forkBuffer = exports.forkJoin = void 0;
-
-var _transducers = require("@thi.ng/transducers");
-
-var _streamSync = require("./stream-sync");
-
-var _tunnel = require("./subs/tunnel");
-
-/**
- * Returns a {@link StreamSync} instance which creates & attaches
- * multiple subscriptions to given `src` input stream, processes each
- * received value in parallel via web workers, then recombines partial
- * results and passes the resulting transformed value downstream.
- *
- * @remarks
- * See {@link ForkJoinOpts} for further details & behavior options and
- * the {@link forkBuffer} and {@link joinBuffer} helpers for array-based
- * value processing (most likely use case).
- *
- * @param src input stream
- * @param opts
- */
-const forkJoin = opts => {
-  const numWorkers = opts.numWorkers || navigator.hardwareConcurrency || 4;
-  const workerIDs = (0, _transducers.range)(numWorkers);
-  return (0, _streamSync.sync)({
-    src: [...(0, _transducers.map)(id => opts.src.transform((0, _transducers.map)(x => opts.fork(id, numWorkers, x))).subscribe((0, _tunnel.tunnel)({
-      src: opts.worker,
-      transferables: opts.transferables,
-      interrupt: opts.interrupt === true,
-      terminate: opts.terminate,
-      id: String(id)
-    })), workerIDs)],
-    xform: (0, _transducers.comp)( // form result tuple in original order
-    (0, _transducers.map)(results => [...(0, _transducers.map)(id => results[id], workerIDs)]), // apply user join function
-    (0, _transducers.map)(opts.join)),
-    reset: true,
-    backPressure: opts.backPressure
-  });
-};
-/**
- * Higher-order fork function for scenarios involving the split-parallel
- * processing of a large buffer.
- *
- * @remarks
- * The returned function is meant to be used as `fork` function in a
- * {@link ForkJoinOpts} config and extracts a workload slice of the
- * original buffer for a single worker. The HOF itself takes a minimum
- * chunk size as optional parameter (default: 1).
- *
- * **Note:** Depending on the configured `minChunkSize` and the size of
- * the input buffer to be partitioned, the returned fork function might
- * produce empty sub-arrays for some workers, iff the configured number
- * of workers exceeds the resulting number of chunks / input values.
- * E.g. If the number of workers = 8, buffer size = 10 and min chunk
- * size = 2, then the last 3 (i.e. 8 - 10 / 2) workers will only receive
- * empty workloads.
- *
- * More generally, if the input buffer size is not equally distributable
- * over the given number of workers, the last worker(s) might receive a
- * larger, smaller or empty chunk.
- *
- * Also see {@link forkJoin} and {@link joinBuffer}.
- *
- * @example
- * ```ts
- * forkJoin<number[], number[], number[], number[]>({
- *     src,
- *     // job definition / split buffer into chunks (min size 256 values)
- *     fork: forkBuffer(256),
- *     // re-join partial results
- *     join: joinBuffer(),
- *     worker: "./worker.js",
- * })
- * ```
- *
- * @param minChunkSize
- */
-
-
-exports.forkJoin = forkJoin;
-
-const forkBuffer = (minChunkSize = 1) => (id, numWorkers, buf) => {
-  const chunkSize = Math.max(minChunkSize, buf.length / numWorkers | 0);
-  return id < numWorkers - 1 ? buf.slice(id * chunkSize, (id + 1) * chunkSize) : buf.slice(id * chunkSize);
-};
-/**
- * Higher-order join function for scenarios involving the split-parallel
- * processing of a large buffer.
- *
- * @remarks
- * The returned function is meant to be used as `join` function in a
- * {@link ForkJoinOpts} config, receives the processed result chunks
- * from all workers (ordered by worker ID) and concatenates them back
- * into a single result array.
- *
- * The optional `fn` arg can be used to pick the actual result chunk
- * from each worker result. This is useful if the worker result type is
- * not an array and includes other data points (e.g. execution metrics
- * etc.). If `fn` is not given, it defaults to the identity function
- * (i.e. each worker's result is assumed to be an array).
- *
- * Also see {@link forkJoin} and {@link forkBuffer}.
- *
- * @param fn
- */
-
-
-exports.forkBuffer = forkBuffer;
-
-const joinBuffer = fn => fn ? parts => [...(0, _transducers.mapcat)(fn, parts)] : parts => Array.prototype.concat.apply([], parts);
-
-exports.joinBuffer = joinBuffer;
-},{"@thi.ng/transducers":"node_modules/@thi.ng/transducers/index.js","./stream-sync":"node_modules/@thi.ng/rstream/stream-sync.js","./subs/tunnel":"node_modules/@thi.ng/rstream/subs/tunnel.js"}],"node_modules/@thi.ng/rstream/metastream.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.MetaStream = exports.metaStream = void 0;
-
-var _api = require("@thi.ng/api");
-
-var _subscription = require("./subscription");
-
-var _idgen = require("./utils/idgen");
-
-/**
- * Returns a {@link Subscription} which transforms each incoming value
- * into a new {@link Stream}, subscribes to it (via an hidden / internal
- * subscription) and then only passes values from that stream to its own
- * subscribers.
- *
- * @remarks
- * If a new value is received, the metastream first unsubscribes from
- * any still active stream, before creating and subscribing to the new
- * stream. Hence this stream type is useful for cases where streams need
- * to be dynamically created & inserted into an existing dataflow
- * topology.
- *
- * The user supplied `factory` function will be called for each incoming
- * value and is responsible for creating the new stream instances. If
- * the function returns null/undefined, no further action will be taken
- * (acts like a filter transducer).
- *
- * The factory function does NOT need to create *new* streams, but can
- * merely return other existing streams, and so making the meta stream
- * act like a switch with arbitrary criteria.
- *
- * If the meta stream itself is the only subscriber to existing input
- * streams, you'll need to configure the input's
- * {@link CommonOpts.closeOut} option to keep them alive and support
- * dynamic switching between them.
- *
- * @example
- * ```ts
- * // transform each received odd number into a stream
- * // producing 3 copies of that number in the metastream
- * // even numbers are ignored
- * a = metastream(
- *   (x) => (x & 1)
- *     ? fromIterable(tx.repeat(x, 3), { delay: 100 })
- *     : null
- * );
- *
- * a.subscribe(trace())
- * a.next(23)
- *
- * // 23
- * // 23
- * // 23
- *
- * a.next(42) // ignored by factory fn
- *
- * a.next(43)
- * // 43
- * // 43
- * // 43
- * ```
- *
- * @example
- * ```ts
- * // infinite inputs
- * a = fromIterable(
- *   tx.repeat("a"),
- *   { delay: 1000, closeOut: CloseMode.NEVER }
- * );
- * b = fromIterable(
- *   tx.repeat("b"),
- *   { delay: 1000, closeOut: CloseMode.NEVER }
- * );
- *
- * // stream selector / switch
- * m = metaStream((x) => x ? a : b);
- * m.subscribe(trace("meta from: "));
- *
- * m.next(true);
- * // meta from: a
- *
- * m.next(false);
- * // meta from: b
- *
- * m.next(true);
- * // meta from: a
- * ```
- *
- * @param factory
- * @param id
- */
-const metaStream = (factory, opts) => new MetaStream(factory, opts);
-
-exports.metaStream = metaStream;
-
-class MetaStream extends _subscription.Subscription {
-  constructor(factory, opts) {
-    super(undefined, (0, _idgen.optsWithID)("metastram", opts));
-    this.factory = factory;
-  }
-
-  next(x) {
-    if (this.state < 2
-    /* DONE */
-    ) {
-        if (this.stream) {
-          this.stream.unsubscribe(this.sub);
-        }
-
-        let stream = this.factory(x);
-
-        if (stream) {
-          this.stream = stream;
-          this.sub = this.stream.subscribe({
-            next: x => {
-              stream === this.stream && super.dispatch(x);
-            },
-            done: () => {
-              this.stream.unsubscribe(this.sub);
-
-              if (stream === this.stream) {
-                this.stream = undefined;
-                this.sub = undefined;
-              }
-            },
-            error: e => super.error(e),
-            __owner: this
-          });
-        }
-      }
-  }
-
-  done() {
-    if (this.stream) {
-      this.detach();
-    }
-
-    super.done();
-  }
-
-  unsubscribe(sub) {
-    if (this.stream && (!sub || this.subs.length === 1)) {
-      this.detach();
-    }
-
-    return super.unsubscribe();
-  }
-
-  detach() {
-    (0, _api.assert)(!!this.stream, "input stream already removed");
-    this.stream.unsubscribe(this.sub);
-    delete this.stream;
-    delete this.sub;
-  }
-
-}
-
-exports.MetaStream = MetaStream;
-},{"@thi.ng/api":"node_modules/@thi.ng/api/index.js","./subscription":"node_modules/@thi.ng/rstream/subscription.js","./utils/idgen":"node_modules/@thi.ng/rstream/utils/idgen.js"}],"node_modules/@thi.ng/rstream/pubsub.js":[function(require,module,exports) {
+},{"./array-set":"node_modules/@thi.ng/associative/array-set.js","./common-keys":"node_modules/@thi.ng/associative/common-keys.js","./difference":"node_modules/@thi.ng/associative/difference.js","./dissoc":"node_modules/@thi.ng/associative/dissoc.js","./equiv-map":"node_modules/@thi.ng/associative/equiv-map.js","./hash-map":"node_modules/@thi.ng/associative/hash-map.js","./indexed":"node_modules/@thi.ng/associative/indexed.js","./intersection":"node_modules/@thi.ng/associative/intersection.js","./into":"node_modules/@thi.ng/associative/into.js","./invert":"node_modules/@thi.ng/associative/invert.js","./join":"node_modules/@thi.ng/associative/join.js","./ll-set":"node_modules/@thi.ng/associative/ll-set.js","./merge-apply":"node_modules/@thi.ng/associative/merge-apply.js","./merge-deep":"node_modules/@thi.ng/associative/merge-deep.js","./merge-with":"node_modules/@thi.ng/associative/merge-with.js","./merge":"node_modules/@thi.ng/associative/merge.js","./rename-keys":"node_modules/@thi.ng/associative/rename-keys.js","./select-keys":"node_modules/@thi.ng/associative/select-keys.js","./sorted-map":"node_modules/@thi.ng/associative/sorted-map.js","./sorted-set":"node_modules/@thi.ng/associative/sorted-set.js","./sparse-set":"node_modules/@thi.ng/associative/sparse-set.js","./union":"node_modules/@thi.ng/associative/union.js","./without-keys":"node_modules/@thi.ng/associative/without-keys.js"}],"node_modules/@thi.ng/rstream/pubsub.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -21058,21 +21058,31 @@ var _nodeFetch = _interopRequireDefault(require("node-fetch"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-let hrefs = ["https://api.census.gov/data.html", "https://api.census.gov/data/2017/acs/acs1?query=some%20text", "https://census.gov/developers/apis#getting-started", "https://census.gov/developers/apis/?slash=true", "https://www.census.gov/developers/apis/?slash=true#focus", "https://www.census.gov/developers/apis/#focus?slash=true", "https://www.census.gov/developers/apis#focus?slash=false", "http://www.example.com/path/to/resource?query=text&search=find+me#focus-heading", "http://api.localhost:1234/todos/2"];
+const log = console.log;
+let hrefs = ["https://api.census.gov/data.html", "https://api.census.gov/data/2017/acs/acs1?query=some%20text", "https://census.gov/developers/apis#getting-started", "https://census.gov/developers/apis/?slash=true", "https://www.census.gov/developers/apis/?slash=true#focus", "https://www.census.gov/developers/apis/#focus?slash=true", "https://app.www.census.gov/developers/apis#focus?slash=false", "http://www.example.com/path/to/resource?query=text&search=find+me#focus-heading", "http://api.localhost:1234/todos/2", "/data.html", "/data/2017/acs/acs1?query=some%20text", "/developers/apis#getting-started", "/developers/apis/?slash=true", "/developers/apis/?slash=true#focus", "/developers/apis/#focus?slash=true", "/developers/apis#focus?slash=false", "/path/to/resource?query=text&search=find+me#focus-heading", "/todos/2"];
 
 const parse_href = href => {
+  let sub_domain = [];
+  let domain = [];
+  let path = [];
   const parts = href.split(/(?=\?)|(?=#)/g);
-  const path_str = parts[0];
   const query_str = parts.filter(part => part.slice(0, 1) === "?")[0] || "";
 
   const query = _querystring.default.parse(query_str.slice(1));
 
   const hash_str = parts.filter(part => part.slice(0, 1) === "#")[0] || "";
   const hash = hash_str.slice(1);
-  const full_path = path_str.split("/").filter(x => x !== "");
-  const domain = full_path[1].split(".").slice(-2);
-  const sub_domain = full_path[1].split(".").slice(0, -2);
-  const path = full_path.slice(2);
+  const path_str = parts[0];
+  const full_path = path_str.split("/").filter(x => x !== ""); //?
+
+  if (/http/g.test(href)) {
+    domain = full_path[1].split(".").slice(-2);
+    sub_domain = full_path[1].split(".").slice(0, -2);
+    path = full_path.slice(2); //?
+  } else {
+    path = full_path;
+  }
+
   return {
     sub_domain,
     domain,
@@ -21090,14 +21100,10 @@ let test = all.slice(-1)[0];
 console.timeEnd("start");
 
 _querystring.default.encode(test.query).replace("%20", "+"); //?
-
-
-(0, _nodeFetch.default)("http://api.example.localhost:1234/users/2", {
-  headers: {
-    "Content-Type": "application/json"
-  }
-}).then(r => r.text()); //?
-},{"querystring":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/index.js","node-fetch":"node_modules/node-fetch/browser.js"}],"hurl.js":[function(require,module,exports) {
+// fetch("http://api.example.localhost:1234/users/2", {
+//   headers: { "Content-Type": "application/json" }
+// }).then(r => r.text()) //?
+},{"querystring":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/index.js","node-fetch":"node_modules/node-fetch/browser.js"}],"dispatcher.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -21105,7 +21111,54 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.dispatch_w_config = void 0;
 
+var _parseHref = require("./parse-href");
+
 var _associative = require("@thi.ng/associative");
+
+var _nodeFetch = _interopRequireDefault(require("node-fetch"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const log = console.log;
+
+const getSomeJSON = async (query, path, b) => {
+  const base = "https://jsonplaceholder.typicode.com/";
+  const data = b ? await (0, _nodeFetch.default)(`${base}${path}/${b}`).then(r => r.json()) : await (0, _nodeFetch.default)(`${base}${path}/`).then(r => r.json());
+  return data;
+};
+
+const dispatch_w_config = async h => {
+  const ph = _parseHref.parse_href;
+  const route_obj = ph(h);
+  log(route_obj);
+  const {
+    sub_domain,
+    domain,
+    path: [a, b, c, d],
+    query,
+    hash
+  } = route_obj; // prettier-ignore
+
+  const data = (await new _associative.EquivMap([[{ ...ph(h),
+    path: ["todos"]
+  }, getSomeJSON(query, "todos", null)], [{ ...ph(h),
+    path: ["todos", b]
+  }, getSomeJSON(query, "todos", b)], [{ ...ph(h),
+    path: ["users"]
+  }, getSomeJSON(query, "users", null)], [{ ...ph(h),
+    path: ["users", b]
+  }, getSomeJSON(query, "users", b)]]).get(route_obj)) || null; // this is used by importing dispatch_w_config into the server config.
+
+  if (domain.length < 1) return data; // this would be an hdom + spec -> page
+
+  const el = document.createElement("code");
+  el.innerText = JSON.stringify(data, null, 2);
+  if (el !== "404") document.body.appendChild(el);
+};
+
+exports.dispatch_w_config = dispatch_w_config;
+},{"./parse-href":"parse-href.js","@thi.ng/associative":"node_modules/@thi.ng/associative/index.js","node-fetch":"node_modules/node-fetch/browser.js"}],"hurl.js":[function(require,module,exports) {
+"use strict";
 
 var _rstream = require("@thi.ng/rstream");
 
@@ -21114,6 +21167,8 @@ var xf = _interopRequireWildcard(require("@thi.ng/transducers"));
 var _querystring = _interopRequireDefault(require("querystring"));
 
 var _parseHref = require("./parse-href");
+
+var _dispatcher = require("./dispatcher");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -21165,43 +21220,8 @@ log("JS Loaded!"); // log("routing once")
 //  FRIVOLOUS
 // exports two things, a route_stream and a route function that can push events to the route_stream
 
-const getSomeJSON = async (query, path, b) => {
-  const base = "https://jsonplaceholder.typicode.com/";
-  const data = b ? await fetch(`${base}${path}/${b}`).then(r => r.json()) : await fetch(`${base}${path}/`).then(r => r.json());
-  return data;
-};
-
 const pushToWindowHistory = (...args) => (log("pushed:", args), history.pushState(...args)); // dispatch should take config data and then be "activated"
-
-
-const dispatch_w_config = async h => {
-  const ph = _parseHref.parse_href;
-  const route_obj = ph(h);
-  log(route_obj);
-  const {
-    sub_domain,
-    domain,
-    path: [a, b, c, d],
-    query,
-    hash
-  } = route_obj; // prettier-ignore
-
-  const data = (await new _associative.EquivMap([[{ ...ph(h),
-    path: ["todos"]
-  }, getSomeJSON(query, "todos", null)], [{ ...ph(h),
-    path: ["todos", b]
-  }, getSomeJSON(query, "todos", b)], [{ ...ph(h),
-    path: ["users"]
-  }, getSomeJSON(query, "users", null)], [{ ...ph(h),
-    path: ["users", b]
-  }, getSomeJSON(query, "users", b)]]).get(route_obj)) || null; // this is used by importing dispatch_w_config into the server config.
-
-  if (sub_domain[0] === "api") return data; // this would be an hdom + spec -> page
-
-  const el = document.createElement("code");
-  el.innerText = JSON.stringify(data, null, 2);
-  if (el !== "404") document.body.appendChild(el);
-}; //
+//
 //                                                 d8
 //   e88~~8e  Y88b  /  888-~88e   e88~-_  888-~\ _d88__  d88~\
 //  d888  88b  Y88b/   888  888b d888   i 888     888   C888
@@ -21213,7 +21233,6 @@ const dispatch_w_config = async h => {
 // navigation bar
 
 
-exports.dispatch_w_config = dispatch_w_config;
 const route_stream_DOM = (0, _rstream.fromDOMEvent)(window, "popstate", "route-stream");
 const load_stream_DOM = (0, _rstream.fromDOMEvent)(window, "load", "load-stream"); // addEventListener("load", e =>
 //   pushToWindowHistory(parse_href(e.target.location.href), null, e.target.location.href))
@@ -21243,7 +21262,7 @@ document.querySelectorAll("a").forEach(a => a.addEventListener("click", href_han
 const start = console.time;
 const end = console.timeEnd;
 nav_stream_DOM.subscribe( // trace("route"),
-xf.map(x => (start("dispatch"), dispatch_w_config(x.target.location.href), end("dispatch"))));
+xf.map(x => (start("dispatch"), (0, _dispatcher.dispatch_w_config)(x.target.location.href), end("dispatch"))));
 /* TBD/TOD:
 - nav_stream_SRV
 - memoization/caching strategy
@@ -21251,7 +21270,7 @@ xf.map(x => (start("dispatch"), dispatch_w_config(x.target.location.href), end("
 - decouple all the things
 
 */
-},{"@thi.ng/associative":"node_modules/@thi.ng/associative/index.js","@thi.ng/rstream":"node_modules/@thi.ng/rstream/index.js","@thi.ng/transducers":"node_modules/@thi.ng/transducers/index.js","querystring":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/index.js","./parse-href":"parse-href.js"}],"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"@thi.ng/rstream":"node_modules/@thi.ng/rstream/index.js","@thi.ng/transducers":"node_modules/@thi.ng/transducers/index.js","querystring":"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/node_modules/querystring-es3/index.js","./parse-href":"parse-href.js","./dispatcher":"dispatcher.js"}],"../../../AppData/Local/nvs/node/10.16.2/x64/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;

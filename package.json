@@ -2,7 +2,7 @@
   "name": "hurl",
   "version": "1.0.0",
   "description": "- uses pattern matching for routing\r - agnostic to where the user enters the app\r - deeplinks are supported via \"intelligent hydration\"\r - Not coupled to rendering/view, it's \"just data\" (mostly)",
-  "main": "server.js",
+  "main": "dist/server.js",
   "dependencies": {
     "@thi.ng/associative": "^3.1.1",
     "@thi.ng/rstream": "^3.0.0",
@@ -14,7 +14,7 @@
     "eslint": "^6.7.2"
   },
   "scripts": {
-    "start": "node server.js"
+    "start": "node dist/server.js"
   },
   "author": "",
   "license": "ISC",
