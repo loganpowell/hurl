@@ -53,7 +53,10 @@ on_hurl(({ hurl_data, hurl_state }) => {
   //
   //  fix this `https://TBD.com" to be based on something useful (either process.env or a CONST)
 
-  let path = ["https://TBD.com", ...hurl_state.path].join("/")
+  let path = [
+    "https://lirc1bvijj.execute-api.us-east-1.amazonaws.com/staging",
+    ...hurl_state.path
+  ].join("/")
   let el = document.createElement("pre") // expose to plug
   el.innerText = JSON.stringify(hurl_data, null, 2)
   if (el !== "404") document.body.appendChild(el)
