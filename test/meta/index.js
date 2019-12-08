@@ -1,11 +1,7 @@
-export const inject_meta = (prop, content) => {
-  let meta = document
-    .createRange()
-    .createContextualFragment(`<meta property="${prop}" content="${content}"/>`)
-  document.getElementsByTagName("head")[0].appendChild(meta)
-}
+import { injectInHead } from "../../src"
 
-inject_meta("og:title", "just a test content injection")
-inject_meta("og:image", "https://i.imgur.com/BOdIBQz.gif")
+injectInHead("meta", "just a test content injection", "og:title")
+injectInHead("meta", "https://i.imgur.com/BOdIBQz.gif", "og:image")
+injectInHead("title", "A new title")
 
 console.log("navigator.userAgent:", navigator.userAgent)

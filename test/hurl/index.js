@@ -1,5 +1,5 @@
-import * as xf from "@thi.ng/transducers"
-import { hurl_link, register_router_BOM } from "../../src/"
+// import * as xf from "@thi.ng/transducers"
+import { hurl_link, register_router_BOM, injectInHead } from "../../src/"
 import { router } from "./router"
 
 let link1 = Object.assign(document.createElement("a"), {
@@ -46,6 +46,9 @@ on_hurl(data => {
   const el = document.createElement("pre") // expose to plug
   el.innerText = JSON.stringify(data, null, 2)
   if (el !== "404") document.body.appendChild(el)
+  injectInHead("meta", "just a test content injection", "og:title")
+  injectInHead("meta", "https://i.imgur.com/BOdIBQz.gif", "og:image")
+  injectInHead("title", "A new title")
 })
 
 // data_stream.subscribe(
