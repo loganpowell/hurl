@@ -1,0 +1,7 @@
+{
+  "name": "hurl-meta-test",
+  "profile": "hurlTest",
+  "regions": [
+    "us-east-1"
+  ]
+}
