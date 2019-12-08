@@ -2,6 +2,7 @@ import { stream } from "@thi.ng/rstream"
 import { parse_hurl } from "./hurl-parser"
 import { trigger_async_route } from "./hurl"
 import { map } from "@thi.ng/transducers"
+// import { log } from "./utils"
 // import fetch from "node-fetch"
 
 //
@@ -65,6 +66,7 @@ export const hurl_dispatch = fn =>
  * */
 export const hurl_router = config_fn => async h => {
   const state = parse_hurl(h)
+  // log("state:", state)
   let data = await config_fn(state)
   hurl_data_stream.next({ hurl_data: data })
   trigger_async_route(true)

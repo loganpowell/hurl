@@ -11,14 +11,20 @@
   },
   "devDependencies": {
     "eslint": "^6.7.2",
+    "parcel-plugin-prerender": "^1.4.1",
     "react-snap": "^1.23.0"
   },
   "scripts": {
     "clean": "rm -rf .cache build build",
     "build": "npm run clean && parcel build test/hurl/index.html -d build --public-url ./ --no-source-maps --no-cache",
     "start": "parcel test/hurl/index.html -d build",
-    "serve": "node dist/server.js",
-    "postbuild": "react-snap"
+    "serve": "node dist/server.js"
+  },
+  "prerender": {
+    "routes": ["/", "/todos", "/users"],
+    "rendererConfig":{
+      "renderAfterDocumentEvent": "page-ready"
+    }
   },
   "author": "",
   "license": "ISC",

@@ -21,19 +21,20 @@ const async_nav_stream_BOM = nav_stream_BOM.subscribe(
 )
 
 async_nav_stream_BOM.subscribe(
-  xf.map(x =>
+  xf.map(x => {
     history.pushState(
       parse_hurl(x[0].target.location.href),
       null,
       x[0].target.location.href
     )
-  )
+    document.dispatchEvent(new Event("page-ready"))
+  })
 )
 
 // link clicking
 export const hurl_link = e => {
   e.preventDefault()
-  // log(e)
+  log(e.target.href)
   if (window.location.href === e.target.href) return
 
   popstate_stream_BOM.next({
