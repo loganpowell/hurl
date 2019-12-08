@@ -42,10 +42,23 @@ document
 
 const on_hurl = register_router_BOM(router)
 
-on_hurl(data => {
-  const el = document.createElement("pre") // expose to plug
-  el.innerText = JSON.stringify(data, null, 2)
+on_hurl(({ hurl_data, hurl_state }) => {
+  //
+  //  d8                  888
+  //  _d88__  e88~-_   e88~\888  e88~-_
+  //  888   d888   i d888  888 d888   i
+  //  888   8888   | 8888  888 8888   |
+  //  888   Y888   ' Y888  888 Y888   '
+  //  "88_/  "88_-~   "88_/888  "88_-~
+  //
+  //  fix this `https://TBD.com" to be based on something useful (either process.env or a CONST)
+
+  let path = ["https://TBD.com", ...hurl_state.path].join("/")
+  let el = document.createElement("pre") // expose to plug
+  el.innerText = JSON.stringify(hurl_data, null, 2)
   if (el !== "404") document.body.appendChild(el)
+  log("hurl_state:", hurl_state)
+  injectInHeadDOM("meta", `${path}`, "og:url")
   injectInHeadDOM("meta", "just a test content injection", "og:title")
   injectInHeadDOM("meta-image", "https://i.imgur.com/BOdIBQz.gif", "og:image")
   injectInHeadDOM("title", "A new title")

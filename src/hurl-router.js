@@ -29,8 +29,7 @@ export const hurl_data_stream = stream()
  * to every emission of data from the stream
  * @example
  * */
-export const hurl_dispatch = fn =>
-  hurl_data_stream.subscribe(map(({ hurl_data }) => fn(hurl_data)))
+export const hurl_dispatch = fn => hurl_data_stream.subscribe(map(x => fn(x)))
 
 /**
  * Takes a routing configuration function and returns a router that
@@ -68,6 +67,6 @@ export const hurl_router = config_fn => async h => {
   const state = parse_hurl(h)
   // log("state:", state)
   let data = await config_fn(state)
-  hurl_data_stream.next({ hurl_data: data })
+  hurl_data_stream.next({ hurl_data: data, hurl_state: state })
   trigger_async_route(true)
 }

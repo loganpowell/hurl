@@ -16,7 +16,7 @@ const load_stream_BOM = fromDOMEvent(window, "DOMContentLoaded", "load-stream")
 const async_route = stream()
 const nav_stream_BOM = merge({ src: [popstate_stream_BOM, load_stream_BOM] })
 
-const async_nav_stream_BOM = nav_stream_BOM.subscribe(
+export const async_nav_stream_BOM = nav_stream_BOM.subscribe(
   sidechainPartition(async_route)
 )
 
