@@ -20,6 +20,11 @@ const async_nav_stream_BOM = nav_stream_BOM.subscribe(
   sidechainPartition(async_route)
 )
 
+/**
+ * represents the actual routing event stream that triggers:
+ * A: history.pushState event (changes browser URL)
+ * B: dispatches custom 'page-ready' event used for prerender
+ * */
 async_nav_stream_BOM.subscribe(
   xf.map(x => {
     history.pushState(

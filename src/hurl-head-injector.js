@@ -10,9 +10,17 @@ const inject_title = title => {
   return create_fragment(`<title>${title}</title>`)
 }
 
-export const injectInHead = (type, content, prop) => {
+export const injectInHeadDOM = (type, content, prop) => {
   let DOM
+  let width = null
+  let height = null
+  let head = document.getElementsByTagName("head")[0]
   switch (type) {
+    case "meta-image":
+      DOM = inject_meta(prop, content)
+      width = inject_meta("og:image:width", "1600")
+      height = inject_meta("og:image:height", "900")
+      break
     case "meta":
       DOM = inject_meta(prop, content)
       break
@@ -20,5 +28,11 @@ export const injectInHead = (type, content, prop) => {
       DOM = inject_title(content)
       break
   }
-  document.getElementsByTagName("head")[0].appendChild(DOM)
+  if (width) {
+    head.appendChild(DOM)
+    head.appendChild(width)
+    head.appendChild(height)
+  } else {
+    head.appendChild(DOM)
+  }
 }

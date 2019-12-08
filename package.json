@@ -16,7 +16,8 @@
   },
   "scripts": {
     "clean": "rm -rf .cache build build",
-    "build": "npm run clean && parcel build test/hurl/index.html -d build --public-url ./ --no-source-maps --no-cache",
+    "prep": "npm run clean && mkdir build && cp -r up.json build",
+    "build": "npm run prep && parcel build test/hurl/index.html -d build --public-url ./ --no-source-maps --no-cache",
     "start": "parcel test/hurl/index.html -d build",
     "serve": "node dist/server.js"
   },
