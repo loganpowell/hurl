@@ -1,5 +1,5 @@
 import http from "http"
-import { dispatch_w_config } from "./dispatcher"
+import { router } from "./router"
 const { PORT = 3000, UP_STAGE } = process.env
 
 const server = http.createServer()
@@ -15,7 +15,7 @@ server.on("request", async (req, res) => {
 
   log("PORT:", PORT)
   // log("request:", req) // -> url: '/',
-  let data = await dispatch_w_config(req.url)
+  let data = await router(req.url)
   // log(data)
   res.end(JSON.stringify(data))
 })
