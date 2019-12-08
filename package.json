@@ -13,6 +13,7 @@
     "eslint": "^6.7.2"
   },
   "scripts": {
+    "build": "parcel build test/meta/index.html --public-url=./",
     "start": "node dist/server.js"
   },
   "author": "",
