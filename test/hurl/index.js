@@ -67,7 +67,11 @@ on_hurl(({ hurl_data, hurl_state }) => {
   injectInHeadDOM("meta", "some crappy static description", "og:description")
 
   injectInHeadDOM("meta", "just a test content injection", "og:title")
-  injectInHeadDOM("meta-image", "https://i.imgur.com/BOdIBQz.gif", "og:image")
+  injectInHeadDOM(
+    "meta-image",
+    "https://www.frolicme.com/wp-content/uploads/2017/02/23-02-17a.jpg",
+    "og:image"
+  )
   injectInHeadDOM("title", "A new title")
 })
 
