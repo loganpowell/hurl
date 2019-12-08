@@ -7,3 +7,5 @@ export const inject_meta = (prop, content) => {
 
 inject_meta("og:title", "just a test content injection")
 inject_meta("og:image", "https://i.imgur.com/BOdIBQz.gif")
+
+console.log("navigator.userAgent:", navigator.userAgent)

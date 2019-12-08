@@ -12,7 +12,7 @@ import { log, start, end } from "./utils"
 // 📌 TODO: change to a component
 
 const popstate_stream_BOM = fromDOMEvent(window, "popstate", "popstate-stream")
-const load_stream_BOM = fromDOMEvent(window, "load", "load-stream")
+const load_stream_BOM = fromDOMEvent(window, "DOMContentLoaded", "load-stream")
 const async_route = stream()
 const nav_stream_BOM = merge({ src: [popstate_stream_BOM, load_stream_BOM] })
 
@@ -41,7 +41,7 @@ export const hurl_link = e => {
       location: e.target
     }
   })
-
+  return e
   // history.pushState(parse_hurl(e.target.href), null, e.target.href)
 }
 
