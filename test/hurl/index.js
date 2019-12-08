@@ -62,6 +62,9 @@ on_hurl(({ hurl_data, hurl_state }) => {
   if (el !== "404") document.body.appendChild(el)
   log("hurl_state:", hurl_state)
   injectInHeadDOM("meta", `${path}`, "og:url")
+  injectInHeadDOM("meta", "website", "og:type")
+  injectInHeadDOM("meta", "some crappy static description", "og:description")
+
   injectInHeadDOM("meta", "just a test content injection", "og:title")
   injectInHeadDOM("meta-image", "https://i.imgur.com/BOdIBQz.gif", "og:image")
   injectInHeadDOM("title", "A new title")
