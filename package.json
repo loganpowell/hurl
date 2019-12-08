@@ -15,10 +15,10 @@
     "react-snap": "^1.23.0"
   },
   "scripts": {
-    "clean": "rm -rf .cache build build",
-    "prep": "npm run clean && mkdir build && cp -r up.json build",
-    "build": "npm run prep && parcel build test/hurl/index.html -d build --public-url ./ --no-source-maps --no-cache",
-    "start": "parcel test/hurl/index.html -d build",
+    "clean": "rm -rf .cache dist dist",
+    "prep": "npm run clean && mkdir dist && cp -r up.json dist",
+    "build": "npm run prep && parcel build test/hurl/index.html -d dist --public-url ./ --no-source-maps --no-cache",
+    "start": "parcel test/hurl/index.html -d dist",
     "serve": "node dist/server.js"
   },
   "prerender": {

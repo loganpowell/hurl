@@ -55,7 +55,8 @@ on_hurl(({ hurl_data, hurl_state }) => {
 
   let path = [
     "https://lirc1bvijj.execute-api.us-east-1.amazonaws.com/staging",
-    ...hurl_state.path
+    ...hurl_state.path,
+    ""
   ].join("/")
   let el = document.createElement("pre") // expose to plug
   el.innerText = JSON.stringify(hurl_data, null, 2)
