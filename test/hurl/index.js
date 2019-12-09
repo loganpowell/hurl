@@ -47,6 +47,7 @@ on_hurl(({ hurl_data, hurl_state }) => {
   let { domain, path } = hurl_state
   let page_ID = parseInt(path.slice(-1).toString())
 
+  // 📌 TODO: power the dynamic stuff from TBD json data in hurl_data
   let inject = {
     meta_image: `https://picsum.photos/${
       !isNaN(page_ID) ? `id/${page_ID}/` : ""

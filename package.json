@@ -17,7 +17,7 @@
   "scripts": {
     "clean": "rm -rf .cache dist dist",
     "prep": "npm run clean && mkdir dist && cp -r up.json dist",
-    "build": "npm run prep && parcel build test/hurl/index.html -d dist --public-url ./ --no-source-maps --no-cache",
+    "build": "npm run prep && parcel build test/hurl/index.html -d dist  --no-source-maps --no-cache",
     "start": "parcel test/hurl/index.html -d dist",
     "serve": "node dist/server.js"
   },
