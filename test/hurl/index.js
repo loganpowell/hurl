@@ -1,5 +1,5 @@
 // import * as xf from "@thi.ng/transducers"
-import { hurl_link, register_router_BOM, replaceMeta } from "../../src/"
+import { hurl_link, register_router_BOM, replaceMeta } from "../../src"
 import { router } from "./router"
 
 let link1 = Object.assign(document.createElement("a"), {
