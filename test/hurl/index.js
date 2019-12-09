@@ -1,5 +1,5 @@
 // import * as xf from "@thi.ng/transducers"
-import { hurl_link, register_router_BOM, injectInHeadDOM } from "../../src/"
+import { hurl_link, register_router_BOM, replaceMeta } from "../../src/"
 import { router } from "./router"
 
 let link1 = Object.assign(document.createElement("a"), {
@@ -43,36 +43,28 @@ document
 const on_hurl = register_router_BOM(router)
 
 on_hurl(({ hurl_data, hurl_state }) => {
-  //
-  //  d8                  888
-  //  _d88__  e88~-_   e88~\888  e88~-_
-  //  888   d888   i d888  888 d888   i
-  //  888   8888   | 8888  888 8888   |
-  //  888   Y888   ' Y888  888 Y888   '
-  //  "88_/  "88_-~   "88_/888  "88_-~
-  //
-  //  fix this `https://TBD.com" to be based on something useful (either process.env or a CONST)
+  let data = Array.isArray(hurl_data) ? hurl_data : [hurl_data]
+  let { domain, path } = hurl_state
+  let page_ID = parseInt(path.slice(-1).toString())
 
-  let path = [
-    "https://lirc1bvijj.execute-api.us-east-1.amazonaws.com/staging",
-    ...hurl_state.path,
-    ""
-  ].join("/")
+  let inject = {
+    meta_image: `https://picsum.photos/${
+      !isNaN(page_ID) ? `id/${page_ID}/` : ""
+    }1000/600.jpg`,
+    meta_description: `${
+      path[0] === "todos" ? data[0].title : data[0].company.catchPhrase
+    }`,
+    meta_title: `${path.join(" ")} page`,
+    meta_url: [domain, ...path, ""].join("/"),
+    title_NA: `${path
+      .map(x => x.charAt(0).toUpperCase() + x.slice(1))
+      .join(" ")}`
+  }
+  replaceMeta(inject)
   let el = document.createElement("pre") // expose to plug
   el.innerText = JSON.stringify(hurl_data, null, 2)
   if (el !== "404") document.body.appendChild(el)
   log("hurl_state:", hurl_state)
-  injectInHeadDOM("meta", `${path}`, "og:url")
-  injectInHeadDOM("meta", "website", "og:type")
-  injectInHeadDOM("meta", "some crappy static description", "og:description")
-
-  injectInHeadDOM("meta", "just a test content injection", "og:title")
-  injectInHeadDOM(
-    "meta-image",
-    "https://images.unsplash.com/photo-1531171519596-47c996f5fc7b?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1050&q=80",
-    "og:image"
-  )
-  injectInHeadDOM("title", "A new title")
 })
 
 // data_stream.subscribe(
