@@ -32,7 +32,7 @@ import fetch from "node-fetch"
  * - wraps any non-promise in Promise.resolve(x)
  *
  * Canceling 🤔:
- * - enable ctx.run.cancel() via external or internal events (e.g., popstate / { $ub:  "cancel" })
+ * - enable ctx.run.cancel() via external or internal events (e.g., popstate / { $sub:  "cancel" })
  *
  *
  * */
@@ -45,36 +45,36 @@ let prefetch_link = (ctx, ev) => {
   // single event object just directly pushes to the triggers stream in the stream xf
   // first set state.loading = true
   ctx.run.next({
-    $ub: "state",
+    $sub: "state",
     path: ["body", "loading"],
-    arg: true
+    args: true
   })
 
   // an array triggers the fsm to pass data between events and batch state updates
   // run/batch up a sequence of events
   ctx.run.next([
     {
-      $ub: "init", // sets initial state of FSM
-      arg: { href: ev.target.href }
+      $sub: "init", // sets initial state of FSM
+      args: { href: ev.target.href }
     },
     {
-      $ub: "filter", // another way to handle noops -> only emit if passes predicate
-      arg: ({ href }) =>
+      $sub: "filter", // another way to handle noops -> only emit if passes predicate
+      args: ({ href }) =>
         window.location.href === href
-          ? { $ub: "cancel", arg: "window.location.href === href" }
+          ? { $sub: "cancel", args: "window.location.href === href" }
           : { href }
     },
     {
       // if the xf returns a promise, it is resolved before passing
-      $ub: "fetch",
-      arg: ({ href }) => fetch("api" + href).then(r => r.json()),
+      $sub: "fetch",
+      args: ({ href }) => fetch("api" + href).then(r => r.json()),
       // splitting behavior
       // dispatch to next (invoker .next triggers)
-      res: (state, res) => ({ ...state, data: res.json() }),
+      reso: (state, res) => ({ ...state, data: res.json() }),
       // dispatched to alternative stream (invoker .next errors) and triggers.cancel()
       // also consider just `throw`ing:
       // https://github.com/thi-ng/umbrella/tree/master/packages/rstream#conceptual-differences-to-rxjs
-      err: (state, err) => ({ $ub: "cancel", arg: err })
+      erro: (state, err) => ({ $sub: "cancel", args: err })
     },
     state => route(state, ev.target.href)
   ])
@@ -92,40 +92,40 @@ let prefetch_link = (ctx, ev) => {
 
 let testicular = [
   {
-    $ub: "init", // sets initial state of FSM
-    arg: { href: "https://jsonplaceholder.typicode.com/todos/" }
+    $sub: "init", // sets initial state of FSM
+    args: { href: "https://jsonplaceholder.typicode.com/todos/" }
   },
   {
-    $ub: "filter", // another way to handle noops -> only emit if passes predicate
-    arg: ({ href }) => ({ href: href + "1" })
+    $sub: "filter", // another way to handle noops -> only emit if passes predicate
+    args: ({ href }) => ({ href: href + "1" })
   },
   {
     // if the xf returns a promise, it is resolved before passing
-    $ub: "fetch",
-    arg: ({ href }) => fetch(href).then(r => r.json()),
+    $sub: "fetch",
+    args: ({ href }) => fetch(href).then(r => r.json()),
     // splitting behavior
     // dispatch to next (invoker .next triggers)
-    res: (state, res) => ({ data: res }),
+    reso: (state, res) => ({ data: res }),
     // dispatched to alternative stream (invoker .next errors) and triggers.cancel()
     // also consider just `throw`ing:
     // https://github.com/thi-ng/umbrella/tree/master/packages/rstream#conceptual-differences-to-rxjs
-    err: (state, err) => ({ $ub: "cancel", arg: err })
+    erro: (state, err) => ({ $sub: "cancel", args: err })
   },
   state => route(state)
 ]
 // Lower Order Trigger (on triggers.next("route") )
 let route = state => [
   {
-    $ub: "FLIP",
+    $sub: "FLIP",
     // options (1): https://github.com/davidkpiano/flipping#new-flippingoptions
     // options (2): https://github.com/aholachek/react-flip-toolkit/tree/7382f9380200f5a85296621db852ea2513cc5eec/packages/flip-toolkit
-    arg: "start"
+    args: "start"
   },
   {
-    $ub: "state",
+    $sub: "state",
     path: ["head"],
     // 📌 have to create a function that generates/overwrites these defaults...
-    arg: {
+    args: {
       head: {
         // title: `Hyperlocals ${search && "Search Results for: " + search}`,
         "og:description": "social media for people who hate social media",
@@ -138,27 +138,27 @@ let route = state => [
     }
   },
   {
-    $ub: "state",
+    $sub: "state",
     path: ["body", "content"],
-    arg: { data: state.data }
+    args: { data: state.data }
   },
   {
-    $ub: "state",
+    $sub: "state",
     path: ["body", "loading"],
-    arg: false
+    args: false
   },
   {
-    $ub: "state",
+    $sub: "state",
     path: ["route"],
-    arg: { state: "parse_URL(href)" }
+    args: { state: "parse_URL(href)" }
   },
   {
-    $ub: "pushstate",
-    arg: { state: "parse_URL(href)" }
+    $sub: "pushstate",
+    args: { state: "parse_URL(href)" }
   },
   {
-    $ub: "FLIP",
-    arg: "end"
+    $sub: "FLIP",
+    args: "end"
   }
 ]
 
@@ -189,65 +189,26 @@ export const type_str = x => {
                                         return "type_str NOT FOUND"
 }
 
-const xfsm = fsm({
-  // initial state initializer
-  // (called before processing 1st input)
-  init: () => ({ state: "TBD", todos: 0 }),
-
-  // terminal state ID
-  terminate: "done",
-
-  // individual state handlers
-  states: {
-    // test if val is object or array
-    TBD: (state, tbd) => {
-      if (isArray(tbd)) state.state = "sequence"
-      else if (isObject(tbd)) {
-        state.todo = todos
-        state.state = "singleton"
-      } else throw new Error("I don't know what you're trying to do here with this", tbd)
-    },
-
-    // take state
-    sequence: (state, todos) => {
-      if (state.todos.length > 0) {
-        state.todos = todos
-        state.state = "singleton"
-      } else state.state = "done"
-    },
-
-    promisify: (state, todo) => {},
-
-    prep: (state, todo) => {},
-
-    // terminal state, ignore inputs
-    done: () => {}
-  }
-})
-
 /**
  * Stream Architecture:
  *   #
  * -<0>- |ps|---c---------------c--[ a, b, a ]-a----c---> ctx.run.next() calls
  * -<1>- |ps|---1---------------1------------0-1----1---> run: pubsub({ topic: x => x.length === 0 })
- * -<2>- ---|tp|*-|mg|----------*--------------*----*---> true -> execs:
- * -<3>- ---|tp|xf|-----------⏬☑-------☑-☑-🔄----------> false -> tasks: reduce [ Promise.resolve({}) ]
- * -<4>- |sc|--|xf|mg|------***-------------------------> orders: batch emmission with sidechain ⏬
- * -<5>- ---------|mg|ps|---***-*--------------*----*---> merged: pubsub execution stream
- * -<6>- ------------|ps|---a-b-c-a------------a----c---> command: pubsub({ topic: x => x.sub })
+ * -<3>- ---|tp|xf|---------☑-☑----------☑---⬆----------> false -> tasks: reduce [ Promise.resolve({}) ]
+ * -<2>- ---|tp|--|mg|------*-*-*--------*-----*----*---> true -> execs:
+ * -<4>- ---------|ps|------a-b-c--------a-----a----c---> command: pubsub({ topic: x => x.sub })
  * `defHandler`s - framework:
- * -<"state">- ------|ps|-----------------------------> subscribeTopic("state")
- * -<"route">- ------|ps|-----------------------------> subscribeTopic("route")
- * -<"refer">- ------|ps|-----------------------------> subscribeTopic("refer") -> pushes result of function to run -<1>-
- * -<"FLIP">- -------|ps|-----------------------------> subscribeTopic("FLIP")
- * `defHandler`s - userland:
- * -<a>- ------------|ps|---*-----*----------*--------> subscribeTopic(a)
- * -<b>- ------------|ps|-----*-----------------------> subscribeTopic(b)
- * -<c>- ------------|ps|-------*-----------------*---> subscribeTopic(c)
+ * -<"state">- ---|ps|----------------------------------> subscribeTopic("state")
+ * -<"route">- ---|ps|----------------------------------> subscribeTopic("route")
+ * -<"FLIP">- ----|ps|----------------------------------> subscribeTopic("FLIP")
+ * `defHandler`s - userl-----and:
+ * -<a>- ---------|ps|--------*-----*----------*--------> subscribeTopic(a)
+ * -<b>- ---------|ps|----------*-----------------------> subscribeTopic(b)
+ * -<c>- ---------|ps|------------*-----------------*---> subscribeTopic(c)
  *
  * NOTES:
  * - add `beforeunload` event handler within #4 (orphan): SEE https://youtu.be/QQukWZcIptM
- * - enable ctx.run.cancel() via external or internal events (e.g., popstate / { $ub:  "cancel" })
+ * - enable ctx.run.cancel() via external or internal events (e.g., popstate / { $sub:  "cancel" })
  *
  * -<1>-
  * `run`:
@@ -289,8 +250,8 @@ const execs = run.subscribeTopic(true).subscribe(trace("execs ->"))
  * - emission back to mainstream `run` function:
  *  - there are three ways that the internal dispatcher can
  *    1. any thunks are assumed to be aliases for dispatching run.next(return value of thunk)
- *    2. any $ub: "refer" events are dispatched to the mainstream
- *    3. any $ub: "cancel" events dispatch a run.cancel() event to the mainstream to cancel any pending events
+ *    2. any $sub: "refer" events are dispatched to the mainstream
+ *    3. any $sub: "cancel" events dispatch a run.cancel() event to the mainstream to cancel any pending events
  * */
 
 /*
@@ -312,56 +273,97 @@ export const reducer = todos => {
       return reducer(recur)
     }
     // const remaining = d.length - (i + 1)
-    const { $ub, arg, path, res, err, ...unknown } = c //🤔 ($ub = "")
+    const { $sub, args, path, reso, erro, ...unknown } = c //🤔 ($sub = "")
 
-    if (!$ub)
+    //
+    //  888                /
+    //  888  e88~-_  e88~88e
+    //  888 d888   i 888 888
+    //  888 8888   | "88_88"
+    //  888 Y888   '  /
+    //  888  "88_-~  Cb
+    //                Y8""8D
+    //
+    const idx_dict0 =
+      i > 2
+        ? Array.from(Array(20).keys()).reduce((a, c, i, d) => ({ ...a, [c]: `${c}th` }), {})
+        : []
+    const idx_dict = { 0: "First", 1: "Second", 2: "Third", ...idx_dict0 }
+    const idx_str = idx_dict[i]
+
+    if (Object.keys(unknown).length > 0)
       throw new Error(`
   🔥 there's some kind of typo in one of your command keys... 
-  🔥 Either you didn't provide a required key 
-  🔥 or perhaps you misspelled one?
-  🔥 It's ok! I do it too sometimes!        (ok, maybe a lot)
-  🔥 I did find this unrecognized command: 
-  🤔 ${JSON.stringify(unknown)} 🤔
+  🔥 you may have forgotten to provide a required key 
+  🔥 or perhaps you misspelled one? It's ok 💙 
+  🔥 ${
+    Object.keys(unknown)[0]
+      ? `
+  🔥 I did find an unrecognized entry :
 
+  ${JSON.stringify(unknown).substring(1, JSON.stringify(unknown).length - 1)}
+  `
+      : ""
+  }  
+  here are some parts of the command wherewith it was found: 
+  
+  🤔 ${JSON.stringify(c, null, 2)} 🤔
+
+  it was the ___${"_" + idx_str + "_"}___ in its collection
+  within the command you just executed (or nested therein)
+  
   Hope that helps!
-      `)
 
-    let arg_type = type_str(arg)
+
+  PS: I can't see entries with function values
+  `)
+
+    //
+    //                           888
+    //   e88~~8e  888-~88e  e88~\888
+    //  d888  88b 888  888 d888  888
+    //  8888__888 888  888 8888  888
+    //  Y888    , 888  888 Y888  888
+    //   "88___/  888  888  "88_/888
+    //
+    //
+
+    let arg_type = type_str(args)
     // if just data, pass it through...
-    let result = arg
+    let result = args
 
     // arg handlers by type
     if (arg_type === "STRING") {
-      execs.next({ $ub, arg: result })
+      execs.next({ $sub, args: result })
       return acc
     }
     if (arg_type === "FUNCTION") {
       // acc
-      let temp = arg(acc)
+      let temp = args(acc)
       result = isPromise(temp) ? await temp.catch(e => e) : temp
     }
     if (arg_type === "THUNK") {
-      result = arg()
-      execs.next({ $ub, arg: result }) // 🏃
+      result = args()
+      execs.next({ $sub, args: result }) // 🏃
       return acc
     }
     // result handlers
-    if (err && result instanceof Error) {
+    if (erro && result instanceof Error) {
       console.warn("error in Promise within reducer")
-      let error = err(acc, result)
-      if (error.$ub) return execs.next(error) // 🏃 consider `throw`
+      let error = erro(acc, result)
+      if (error.$sub) return execs.next(error) // 🏃 consider `throw`
       throw new Error(error)
     }
-    if (res && !(result instanceof Error)) {
-      let resolved = res(acc, result)
-      if (resolved.$ub) {
+    if (reso && !(result instanceof Error)) {
+      let resolved = reso(acc, result)
+      if (resolved.$sub) {
         execs.next(resolved)
         return { acc, ...resolved }
       }
       return { ...acc, ...resolved }
     }
     if (path && !(result instanceof Error)) {
-      execs.next({ $ub, path, arg: result })
+      execs.next({ $sub, path, args: result })
       return { ...acc, ...result }
     }
     if (result instanceof Error) {
@@ -369,7 +371,7 @@ export const reducer = todos => {
       throw new Error(result)
     }
 
-    execs.next({ $ub, arg: result })
+    execs.next({ $sub, args: result })
     return { ...acc, ...result }
     // if (remaining < 1)
 
@@ -419,7 +421,7 @@ test_array1.reduce(async (a, c, i) => {
 //   let is_fn = isFunction(arg)
 //   let prms_arg = isPromise(arg)
 //   let referral = is_fn && arg.length === 0
-//   let use_state = is_fn && arg.length > 0 && arg(state)
+//   let use_state = is_fn && arg.length > 0 && args(state)
 //   let sub_promise = x => x === "promise"
 //   let isFn0 = x => isFunction(x) && x.length === 0
 //   let isFn = x => isFunction(x) && x.length > 0
@@ -431,7 +433,7 @@ test_array1.reduce(async (a, c, i) => {
 //         state = { ...state, new: "new stuff" }
 //       }
 //       if (fn_arg) {
-//         let val = await arg()
+//         let val = await args()
 //         state = { ...state, new: "new stuff" }
 //       }
 //       // do side-effects and return accumulated state for `scan`
