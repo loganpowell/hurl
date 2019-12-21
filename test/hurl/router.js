@@ -10,7 +10,7 @@ const getSomeJSON = async (query, path, b) => {
 }
 const routes = async state => {
   let {
-    sub_domain, // array
+    subdomain, // array
     domain, // array
     path: [p_a, p_b], // array
     query, // object

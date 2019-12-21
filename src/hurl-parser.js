@@ -1,7 +1,7 @@
 import qs from "querystring"
 
 export const parse_hurl = URL => {
-  let sub_domain = []
+  let subdomain = []
   let domain = []
   let path = []
   const parts = URL.split(/(?=\?)|(?=#)/g)
@@ -13,10 +13,10 @@ export const parse_hurl = URL => {
   const full_path = path_str.split("/").filter(x => x !== "") //?
   if (/http/g.test(URL)) {
     domain = full_path[1].split(".").slice(-2)
-    sub_domain = full_path[1].split(".").slice(0, -2)
+    subdomain = full_path[1].split(".").slice(0, -2)
     path = full_path.slice(2) //?
   } else {
     path = full_path
   }
-  return { sub_domain, domain, path, query, hash }
+  return { subdomain, domain, path, query, hash }
 }

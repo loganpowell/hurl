@@ -47,7 +47,7 @@ export const hurl_dispatch = fn => hurl_data_stream.subscribe(map(x => fn(x)))
  *}
  *const routes = async state => {
  *  let {
- *    sub_domain,       // array
+ *    subdomain,       // array
  *    domain,           // array
  *    path: [p_a, p_b], // array
  *    query,            // object
