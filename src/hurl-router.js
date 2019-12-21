@@ -1,5 +1,5 @@
 import { stream } from "@thi.ng/rstream"
-import { parse_hurl } from "./hurl-parser"
+import { parse_href } from "./"
 import { trigger_async_route } from "./hurl"
 import { map } from "@thi.ng/transducers"
 // import { log } from "./utils"
@@ -64,7 +64,7 @@ export const hurl_dispatch = fn => hurl_data_stream.subscribe(map(x => fn(x)))
  *export const router = hurl_router(routes)
  * */
 export const hurl_router = config_fn => async h => {
-  const state = parse_hurl(h)
+  const state = parse_href(h)
   // log("state:", state)
   let data = await config_fn(state)
   hurl_data_stream.next({ hurl_data: data, hurl_state: state })

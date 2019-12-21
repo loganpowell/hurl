@@ -8,8 +8,8 @@
     "@thi.ng/rstream": "^3.0.0",
     "dotenv": "^8.2.0",
     "node-fetch": "^2.6.0",
-    "union-type": "^0.4.1",
-    "querystring": "^0.2.0"
+    "querystring": "^0.2.0",
+    "union-type": "^0.4.1"
   },
   "devDependencies": {
     "@thi.ng/transducers-fsm": "^1.1.7",
@@ -31,7 +31,7 @@
   ],
   "prettier": {
     "endOfLine": "lf",
-    "printWidth": 100,
+    "printWidth": 80,
     "semi": false
   }
 }

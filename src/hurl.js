@@ -5,7 +5,7 @@ import {
   stream
 } from "@thi.ng/rstream"
 import * as xf from "@thi.ng/transducers"
-import { parse_hurl } from "./hurl-parser"
+import { parse_href } from "./"
 import { hurl_dispatch } from "./hurl-router"
 import { log, start, end } from "./utils"
 
@@ -28,7 +28,7 @@ export const async_nav_stream_BOM = nav_stream_BOM.subscribe(
 async_nav_stream_BOM.subscribe(
   xf.map(x => {
     history.pushState(
-      parse_hurl(x[0].target.location.href),
+      parse_href(x[0].target.location.href),
       null,
       x[0].target.location.href
     )
