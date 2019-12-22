@@ -22,9 +22,16 @@ export const defHandler = (id, handler, xform) => {
 }
 
 /**
+ * # `trace_stream`
+ *
  * simple ad-hoc tracer to log one of the streams emmissions
+ * @param {string} log_prefix A string that is prepended to
+ *                  console.log's of emissions from the stream
+ * @param {stream}
  * */
-export const trace_stream = (id, stream) => stream.subscribe(trace(id))
+export const trace_stream = (log_prefix, stream) =>
+  stream.subscribe(trace(log_prefix))
+
 /**
  * PSEUDO:
  * - create some test payloads for dispatcher: single obj & array

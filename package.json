@@ -1,6 +1,6 @@
 {
   "name": "hurl",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "- uses pattern matching for routing\r - agnostic to where the user enters the app\r - deeplinks are supported via \"intelligent hydration\"\r - Not coupled to rendering/view, it's \"just data\" (mostly)",
   "main": "dist/server.js",
   "dependencies": {
@@ -14,6 +14,7 @@
   "devDependencies": {
     "@thi.ng/transducers-fsm": "^1.1.7",
     "eslint": "^6.7.2",
+    "jsdoc": "^3.6.3",
     "parcel-plugin-prerender": "^1.4.1",
     "react-snap": "^1.23.0",
     "typedoc": "^0.15.5"
@@ -23,7 +24,8 @@
     "prep": "npm run clean && mkdir dist && cp -r up.json dist",
     "build": "npm run prep && parcel build test/hurl/index.html -d dist --public-url ./ --no-source-maps --no-cache",
     "start": "parcel test/hurl/index.html -d dist",
-    "serve": "node dist/server.js"
+    "serve": "node dist/server.js",
+    "docs": "jsdoc --configure jsdoc.json --verbose"
   },
   "author": "Logan Powell",
   "license": "ISC",

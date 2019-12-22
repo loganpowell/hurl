@@ -1,3 +1,6 @@
+/**
+ @module Streams
+*/
 import {
   isObject,
   isArray,
@@ -11,11 +14,15 @@ import { pubsub } from "@thi.ng/rstream"
 
 // prettier-ignore
 /**
- * string_type:
+ * ### `type_str`
+ *
  * just a little convenience function
  * takes some value and returns a string representation of its type
  * this makes it easier to create a switch statement using types
- * */
+ *
+ * powered by [@thi.ng/checks](http://thi.ng/checks)
+ *
+ */
 export const type_str = x => {
   if (isArray(x))                       return "ARRAY"
   if (isFunction(x) && x.length === 0)  return "THUNK"
@@ -43,15 +50,15 @@ export const type_str = x => {
  * 3>- ---|tp|----*-*-*----------*---*----*---> : command$
  * 4>- ------|ps|-a-b-c----------a---a----c---> : pubsub
  * Handlers:
- * a>- ------|ps|-*------------*-----*-------->
+ * a>- ------|ps|-*--------------*---*-------->
  * b>- ------|ps|---*------------------------->
  * c>- ------|ps|-----*-------------------*--->
  * ```
  * ## Streams
- * - `0>-`: `ctx.run.next(x)` calls
+ * - `0>-`: `ctx.run$.next(x)` userland dispatch stream
  * - `1>-`: `pubsub({ topic: x => x.length === 0 })`
- * - `2>-`: `false` -> `task$`: Task Dispatcher
- * - `3>-`: `true` -> `command$`: Commands stream
+ * - `2>-`: pubsub = `false` ? -> `task$`: Task Dispatcher
+ * - `3>-`: pubsub = `true` ? -> `command$`: Commands stream
  * - `4>-`: `pubsub({ topic: x => x.sub })`
  *
  * ## Handlers
@@ -62,7 +69,7 @@ export const type_str = x => {
  * ### Handlers (framework provided):
  * - "state": Global state mutations
  * - "route": Routing
- * - "FLIP" : F.L.I.P. animations
+ * - "FLIP" : [F.L.I.P.](https://aerotwist.com/blog/flip-your-animations/) animations
  *
  *
  * 📌 TODO:
@@ -71,33 +78,45 @@ export const type_str = x => {
  * - enable ctx.run.cancel() via external or internal events
  *    (e.g., popstate / { sub$:  "cancel" })
  *
- * ## `run$` stream
- * - `1>-`: root event stream (exposed via `ctx`)
- * - bisects (based on whether or not the payload is an array)
- *   to _either_:
+ * # `run$`
  *
- * ### `task$` stream
- * - `2>-`: stream (if array of event objects)
+ * User-land event dispatch stream
  *
- * ### `command$` stream
- * - `3>-`: stream (if single event object)
- *   (see `dispatcher` for more details on #2 below)
+ * This stream is directly exposed to users via `ctx`
+ * Any one-off Commands `next`ed into this stream are sent
+ * to the `command$` stream. Arrays of Commands (Tasks) are
+ * sent to the `task$` stream.
  *
- * */
+ */
 export const run$ = pubsub({ topic: x => x.length === 0, id: "run_stream" })
+
 /**
- * # `command$` stream
+ * # `command$`
  *
- * `3>-`: stream (if single event object)
+ * Primary read stream
+ * All user-defined handlers are attached to a `pubsub`
+ * stemming from this stream. The `topic` function used
+ * to alert downstream handlers is a simple lookup of the
+ * `sub$` key of the command
  *
  *
- * */
+ *
+ */
 export const command$ = run$.subscribeTopic(true)
 
 /**
- * just a helpful warning for the probable case of a user
- * misspelling one or more of a command's accepted keys
- * */
+ * # `task$`
+ *
+ * Batch processing stream, listens for Tasks sent as an
+ * array of Commands (including subtask functions)
+ *
+ * stream (if array of event objects)
+ *
+ */
+export const task$ = run$
+  .subscribeTopic(false)
+  .transform(map(todos => dispatcher(todos)))
+
 const unknown_key = (c, i, unknown) => {
   const idx_dict0 =
     i > 2
@@ -132,7 +151,7 @@ const unknown_key = (c, i, unknown) => {
   `
 }
 /**
- * # Task Dispatcher
+ * # `dispatcher`
  * Async `reduce` function
  *
  * ## TL;DR:
@@ -195,7 +214,7 @@ const unknown_key = (c, i, unknown) => {
  * Task is spooling - from being executed during the
  * execution of the Commands in the Task queue.
  *
- * */
+ */
 export const dispatcher = todos =>
   todos.reduce(async (a, c, i) => {
     const acc = await a
@@ -252,16 +271,6 @@ export const dispatcher = todos =>
     command$.next({ sub$, args: result }) // 🏃
     return { ...acc, ...result }
   }, Promise.resolve({}))
-
-/**
- * # `task$` stream
- *
- * `2>-`: stream (if array of event objects)
- *
- * */
-export const task$ = run$
-  .subscribeTopic(false)
-  .transform(map(todos => dispatcher(todos)))
 
 //
 //    88~\             d8           888
