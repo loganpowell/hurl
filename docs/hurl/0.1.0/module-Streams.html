@@ -389,10 +389,12 @@ array of Commands (including subtask functions)</p>
 
   <div class="description">
     <h1><code>dispatcher</code></h1>
-<p>Async <code>reduce</code> function</p>
+<p>Async <code>reduce</code> function, that passes an <em>object</em> as a state
+container between Command invocations.</p>
 <h2>TL;DR:</h2>
 <p>Handles any state updates and/or other effects which
-require <em>ordered</em> choreography</p>
+require <em>ordered</em> choreography and/or have a dependency
+on some (a/sync) data produced by a user interaction.</p>
 <h2>Synopsis:</h2>
 <ul>
 <li>very simple async finite state machine.</li>
@@ -510,7 +512,7 @@ execution of the Commands in the Task queue.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line226">line 226</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line228">line 228</a>
         </li>
       </ul>
     </dd>

@@ -254,11 +254,13 @@ const unknown_key = (c, i, unknown) => {
 
 /**
  * # `dispatcher`
- * Async `reduce` function
+ * Async `reduce` function, that passes an _object_ as a state
+ * container between Command invocations.
  *
  * ## TL;DR:
  * Handles any state updates and/or other effects which
- * require _ordered_ choreography
+ * require _ordered_ choreography and/or have a dependency
+ * on some (a/sync) data produced by a user interaction.
  *
  * ## Synopsis:
  * - very simple async finite state machine.
