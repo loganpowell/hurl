@@ -426,11 +426,11 @@ a Task</li>
 <li>new vals are merged with STATE (dupe keys overwrite)</li>
 </ul>
 <h4>Promise-specific keys:</h4>
-<p>if <code>args</code> is/returns a Promise, these keys are used:
-<code>reso</code> key = handle resolved promises (⚠ binary)</p>
+<p>if <code>args</code> is/returns a Promise, these keys are used:</p>
 <ul>
-<li><code>(2)=&gt;</code> MUST be a binary <code>(STATE, resolved Promise) =&gt;</code>
-<code>erro</code> key = handle rejected promises (⚠ binary)</li>
+<li><code>reso</code> key = handle resolved promises (⚠ binary)</li>
+<li><code>(2)=&gt;</code> MUST be a binary <code>(STATE, resolved Promise) =&gt;</code></li>
+<li><code>erro</code> key = handle rejected promises (⚠ binary)</li>
 <li><code>(2)=&gt;</code> MUST be binary <code>(STATE, Promise rejection) =&gt;</code></li>
 </ul>
 <h2>Subtasks:</h2>
@@ -486,7 +486,7 @@ execution of the Commands in the Task queue.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line218">line 218</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line219">line 219</a>
         </li>
       </ul>
     </dd>

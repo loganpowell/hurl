@@ -33,6 +33,10 @@ let testicular = [
     // https://github.com/thi-ng/umbrella/tree/master/packages/rstream#conceptual-differences-to-rxjs
     erro: (state, err) => ({ sub$: "cancel", args: err })
   },
+  {
+    sub$: "thunk",
+    args: () => ({ sub$: "something", args: "something else" })
+  },
   state => route(state)
 ]
 // Lower Order Trigger (on triggers.next("route") )

@@ -133,3 +133,10 @@ The pattern matching for this could be as easy as creating one pattern matching 
 2. Since the view is rather superficially applied to the state/data, it can be imagined that one might target alternative rendering targets (via alternative "specs") with the same routing/data-hydration architecture (e.g., web, mobile-native, smart-watch, IOT, etc.)
 
 
+#### [Documentation Site](https://loganpowell.github.io/hurl/hurl/0.1.0/)
+
+Documentation generated from markdown comments in source powered by [`jsdoc`](https://www.npmjs.com/package/jsdoc)  with jsdoc's `"plugins/markdown"`
+
+Template from [Braintree](https://braintree.github.io/)'s [`jsdoc-template`](https://github.com/braintree/jsdoc-template)
+
+Setup can be a bit confusing, so I create a [gist](https://gist.github.com/loganpowell/62b8e06a8a6b38540e6268fc2048f5ee) as a sort of note to self, but you may also find it useful if you like the docs of this site.

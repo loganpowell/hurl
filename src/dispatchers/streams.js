@@ -150,6 +150,7 @@ const unknown_key = (c, i, unknown) => {
   PS: I can't see entries w/function values.
   `
 }
+
 /**
  * # `dispatcher`
  * Async `reduce` function
@@ -188,10 +189,10 @@ const unknown_key = (c, i, unknown) => {
  *
  * #### Promise-specific keys:
  * if `args` is/returns a Promise, these keys are used:
- * `reso` key = handle resolved promises (⚠ binary)
- * - `(2)=>` MUST be a binary `(STATE, resolved Promise) =>`
- * `erro` key = handle rejected promises (⚠ binary)
- * - `(2)=>` MUST be binary `(STATE, Promise rejection) =>`
+ * - `reso` key = handle resolved promises (⚠ binary)
+ *  - `(2)=>` MUST be a binary `(STATE, resolved Promise) =>`
+ * - `erro` key = handle rejected promises (⚠ binary)
+ *  - `(2)=>` MUST be binary `(STATE, Promise rejection) =>`
  *
  * ## Subtasks:
  * Subtasks are the way you compose tasks. Insert a Task and
@@ -215,8 +216,8 @@ const unknown_key = (c, i, unknown) => {
  * execution of the Commands in the Task queue.
  *
  */
-export const dispatcher = todos =>
-  todos.reduce(async (a, c, i) => {
+export const dispatcher = task_array =>
+  task_array.reduce(async (a, c, i) => {
     const acc = await a
     // console.log(acc)
     if (isFunction(c)) {
@@ -231,7 +232,7 @@ export const dispatcher = todos =>
 
     // arg handlers by type
     if (arg_type === "STRING") {
-      command$.next({ sub$, args: result })
+      command$.next({ sub$, args })
       return acc
     }
     if (arg_type === "FUNCTION") {
@@ -240,14 +241,14 @@ export const dispatcher = todos =>
     }
     if (arg_type === "THUNK") {
       result = args()
-      command$.next({ sub$, args: result }) // 🏃
+      command$.next(result) // 🏃
       return acc
     }
 
     // result handlers
     if (erro && result instanceof Error) {
-      console.warn("error in Promise within reducer")
       let error = erro(acc, result)
+      console.warn("error in Promise within dispatcher:", result)
       if (error.sub$) return command$.next(error) // 🏃
       throw new Error(error)
     }
@@ -255,7 +256,6 @@ export const dispatcher = todos =>
       let resolved = reso(acc, result)
       if (resolved.sub$) {
         command$.next(resolved) // 🏃
-        return { ...acc, ...resolved }
       }
       return { ...acc, ...resolved }
     }
