@@ -180,23 +180,24 @@ const unknown_key = (c, i, unknown) => {
  * - `reso`: Function | Undefined
  * - `erro`: Function | Undefined
  *
- * #### Required keys
- * 1) `sub$1 key = primary identifier
+ * > Required keys
+ * 1. `sub$` key = primary identifier
  *  - used for registering handlers hooked onto the Command stream.
- * 2) `args` key = primary control structure
+ *
+ * 2. `args` key = primary control structure
  *  - non-function vals send the Command as-is
  *  - `(0)=>` nullary fns send the _args_ as a Command
  *  - `(1)=>` unary fns are passed the STATE and called
  *  - Promises and those returned from fns are resolved
  *  - new vals are merged with STATE (dupe keys overwritten)
  *
- * #### Promise-specific keys:
- * `dispatcher` uses these two keys for Promises:
- * 3) `reso` key = handle resolved promises (⚠ binary): `(2)=>` MUST be a binary `(STATE, resolved Promise) =>`
- * 4) `erro` key = handle rejected promises (⚠ binary): `(2)=>` MUST be binary `(STATE, Promise rejection) =>`
+ * > Promise-specific keys -> `dispatcher` uses these two keys for Promises:
+ * 3. `reso` key = handle resolved promises (⚠ binary): `(2)=>` MUST be a binary `(STATE, resolved Promise) =>`
  *
- * #### State-specific key:
- * 5) `path` key = lens into the global state [Atom](http://thi.ng/atom) for global state evolution (immutably of course)
+ * 4. `erro` key = handle rejected promises (⚠ binary): `(2)=>` MUST be binary `(STATE, Promise rejection) =>`
+ *
+ * > State-specific key:
+ * 5. `path` key = lens into the global state [Atom](http://thi.ng/atom) for global state evolution (immutably of course)
  *
  * ## Subtasks:
  * Subtasks are the way you compose tasks. Insert a Task and

@@ -417,9 +417,11 @@ a Task</li>
 <li><code>reso</code>: Function | Undefined</li>
 <li><code>erro</code>: Function | Undefined</li>
 </ul>
-<h4>Required keys</h4>
+<blockquote>
+<p>Required keys</p>
+</blockquote>
 <ol>
-<li>`sub$1 key = primary identifier</li>
+<li><code>sub$</code> key = primary identifier</li>
 </ol>
 <ul>
 <li>used for registering handlers hooked onto the Command stream.</li>
@@ -434,11 +436,20 @@ a Task</li>
 <li>Promises and those returned from fns are resolved</li>
 <li>new vals are merged with STATE (dupe keys overwritten)</li>
 </ul>
-<h4>Promise-specific keys:</h4>
-<p><code>dispatcher</code> uses these two keys for Promises:
-3) <code>reso</code> key = handle resolved promises (⚠ binary): <code>(2)=&gt;</code> MUST be a binary <code>(STATE, resolved Promise) =&gt;</code>
-4) <code>erro</code> key = handle rejected promises (⚠ binary): <code>(2)=&gt;</code> MUST be binary <code>(STATE, Promise rejection) =&gt;</code></p>
-<h4>State-specific key:</h4>
+<blockquote>
+<p>Promise-specific keys -&gt; <code>dispatcher</code> uses these two keys for Promises:</p>
+</blockquote>
+<ol start="3">
+<li>
+<p><code>reso</code> key = handle resolved promises (⚠ binary): <code>(2)=&gt;</code> MUST be a binary <code>(STATE, resolved Promise) =&gt;</code></p>
+</li>
+<li>
+<p><code>erro</code> key = handle rejected promises (⚠ binary): <code>(2)=&gt;</code> MUST be binary <code>(STATE, Promise rejection) =&gt;</code></p>
+</li>
+</ol>
+<blockquote>
+<p>State-specific key:</p>
+</blockquote>
 <ol start="5">
 <li><code>path</code> key = lens into the global state <a href="http://thi.ng/atom">Atom</a> for global state evolution (immutably of course)</li>
 </ol>
@@ -495,7 +506,7 @@ execution of the Commands in the Task queue.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line223">line 223</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line224">line 224</a>
         </li>
       </ul>
     </dd>
