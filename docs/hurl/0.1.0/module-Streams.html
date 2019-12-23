@@ -155,7 +155,7 @@ c>- ---------|tp|----*-------------------*->
 <li><code>1&gt;-</code>: <code>pubsub({ topic: x =&gt; x.length === 0 })</code></li>
 <li><code>2&gt;-</code>: pubsub = <code>false</code> ? -&gt; <code>task$</code>: Task Dispatcher</li>
 <li><code>3&gt;-</code>: pubsub = <code>true</code> ? -&gt; <code>command$</code>: Commands stream</li>
-<li><code>4&gt;-</code>: <code>pubsub({ topic: x =&gt; x.sub })</code></li>
+<li><code>4&gt;-</code>: <code>pubsub({ topic: x =&gt; x.sub$ })</code></li>
 </ul>
 <h2>Handlers</h2>
 <p><code>4&gt;-</code> this is the stream to which the user (and framework)
@@ -174,7 +174,7 @@ SEE https://youtu.be/QQukWZcIptM</li>
 <li>enable ctx.run.cancel() via external or internal events
 (e.g., popstate / { sub$:  &quot;cancel&quot; })</li>
 </ul>
-<h1><code>run$</code></h1>
+<h2><code>run$</code></h2>
 <p>User-land event dispatch stream</p>
 <p>This stream is directly exposed to users via <code>ctx</code>
 Any one-off Commands <code>next</code>ed into this stream are sent
@@ -246,7 +246,7 @@ sent to the <code>task$</code> stream.</p>
 
 
   <div class="description">
-    <h1><code>command$</code></h1>
+    <h2><code>command$</code></h2>
 <p>Primary read stream
 All user-defined handlers are attached to a <code>pubsub</code>
 stemming from this stream. The <code>topic</code> function used
@@ -318,7 +318,7 @@ to alert downstream handlers is a simple lookup of the
 
 
   <div class="description">
-    <h1><code>task$</code></h1>
+    <h2><code>task$</code></h2>
 <p>Batch processing stream, listens for Tasks sent as an
 array of Commands (including subtask functions)</p>
 <p>stream (if array of event objects)</p>

@@ -59,7 +59,7 @@ export const type_str = x => {
  * - `1>-`: `pubsub({ topic: x => x.length === 0 })`
  * - `2>-`: pubsub = `false` ? -> `task$`: Task Dispatcher
  * - `3>-`: pubsub = `true` ? -> `command$`: Commands stream
- * - `4>-`: `pubsub({ topic: x => x.sub })`
+ * - `4>-`: `pubsub({ topic: x => x.sub$ })`
  *
  * ## Handlers
  * `4>-` this is the stream to which the user (and framework)
@@ -78,7 +78,7 @@ export const type_str = x => {
  * - enable ctx.run.cancel() via external or internal events
  *    (e.g., popstate / { sub$:  "cancel" })
  *
- * # `run$`
+ * ## `run$`
  *
  * User-land event dispatch stream
  *
@@ -91,7 +91,7 @@ export const type_str = x => {
 export const run$ = pubsub({ topic: x => x.length === 0, id: "run_stream" })
 
 /**
- * # `command$`
+ * ## `command$`
  *
  * Primary read stream
  * All user-defined handlers are attached to a `pubsub`
@@ -105,7 +105,7 @@ export const run$ = pubsub({ topic: x => x.length === 0, id: "run_stream" })
 export const command$ = run$.subscribeTopic(true)
 
 /**
- * # `task$`
+ * ## `task$`
  *
  * Batch processing stream, listens for Tasks sent as an
  * array of Commands (including subtask functions)
