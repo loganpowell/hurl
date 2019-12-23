@@ -139,15 +139,15 @@ via the <code>ctx</code> object injected into every <code>hdom</code> component
 the command stream is the only way the user changes
 anything in <code>hurl</code></p>
 <h2>Marble Diagram</h2>
-<pre class="prettyprint source"><code>0>- |ps|---c-------c--[ a, b, a ]-a----c---> : run$
-1>- |ps|---1-------1------------0-1----1---> : pubsub
-2>- ---|tp|xf|-!-!------------!-?----------> : task$
-3>- ---|tp|----*-*-*----------*---*----*---> : command$
-4>- ------|ps|-a-b-c----------a---a----c---> : pubsub
-Handlers:
-a>- ------|ps|-*--------------*---*-------->
-b>- ------|ps|---*------------------------->
-c>- ------|ps|-----*-------------------*--->
+<pre class="prettyprint source"><code>0>- |------c---------c--[ a, b, a ]-a----c-> : run$
+1>- |ps|---1---------1------------0-1----1-> : pubsub
+3>- ---|tp|------*-*-*----------*---*----*-> : command$
+2>- ---|tp|xf|---^-^------------^-?--------> : task$
+4>- ------|ps|--|a-b-c----------a---a----c-> : pubsub
+Handlers
+a>- ---------|tp|*--------------*---*------>
+b>- ---------|tp|--*----------------------->
+c>- ---------|tp|----*-------------------*->
 </code></pre>
 <h2>Streams</h2>
 <ul>
@@ -417,22 +417,31 @@ a Task</li>
 <li><code>reso</code>: Function | Undefined</li>
 <li><code>erro</code>: Function | Undefined</li>
 </ul>
-<p><code>args</code> key = primary control structure</p>
+<h4>Required keys</h4>
+<ol>
+<li>`sub$1 key = primary identifier</li>
+</ol>
+<ul>
+<li>used for registering handlers hooked onto the Command stream.</li>
+</ul>
+<ol start="2">
+<li><code>args</code> key = primary control structure</li>
+</ol>
 <ul>
 <li>non-function vals send the Command as-is</li>
 <li><code>(0)=&gt;</code> nullary fns send the <em>args</em> as a Command</li>
 <li><code>(1)=&gt;</code> unary fns are passed the STATE and called</li>
-<li>Promises returned from fns are resolved</li>
-<li>new vals are merged with STATE (dupe keys overwrite)</li>
+<li>Promises and those returned from fns are resolved</li>
+<li>new vals are merged with STATE (dupe keys overwritten)</li>
 </ul>
 <h4>Promise-specific keys:</h4>
-<p>if <code>args</code> is/returns a Promise, these keys are used:</p>
-<ul>
-<li><code>reso</code> key = handle resolved promises (⚠ binary)</li>
-<li><code>(2)=&gt;</code> MUST be a binary <code>(STATE, resolved Promise) =&gt;</code></li>
-<li><code>erro</code> key = handle rejected promises (⚠ binary)</li>
-<li><code>(2)=&gt;</code> MUST be binary <code>(STATE, Promise rejection) =&gt;</code></li>
-</ul>
+<p><code>dispatcher</code> uses these two keys for Promises:
+3) <code>reso</code> key = handle resolved promises (⚠ binary): <code>(2)=&gt;</code> MUST be a binary <code>(STATE, resolved Promise) =&gt;</code>
+4) <code>erro</code> key = handle rejected promises (⚠ binary): <code>(2)=&gt;</code> MUST be binary <code>(STATE, Promise rejection) =&gt;</code></p>
+<h4>State-specific key:</h4>
+<ol start="5">
+<li><code>path</code> key = lens into the global state <a href="http://thi.ng/atom">Atom</a> for global state evolution (immutably of course)</li>
+</ol>
 <h2>Subtasks:</h2>
 <p>Subtasks are the way you compose tasks. Insert a Task and
 the dispatcher will unpack it in place
@@ -486,7 +495,7 @@ execution of the Commands in the Task queue.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line219">line 219</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line223">line 223</a>
         </li>
       </ul>
     </dd>

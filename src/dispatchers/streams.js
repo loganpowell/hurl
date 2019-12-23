@@ -44,15 +44,15 @@ export const type_str = x => {
  *
  * ## Marble Diagram
  * ```
- * 0>- |ps|---c-------c--[ a, b, a ]-a----c---> : run$
- * 1>- |ps|---1-------1------------0-1----1---> : pubsub
- * 2>- ---|tp|xf|-!-!------------!-?----------> : task$
- * 3>- ---|tp|----*-*-*----------*---*----*---> : command$
- * 4>- ------|ps|-a-b-c----------a---a----c---> : pubsub
- * Handlers:
- * a>- ------|ps|-*--------------*---*-------->
- * b>- ------|ps|---*------------------------->
- * c>- ------|ps|-----*-------------------*--->
+ * 0>- |------c---------c--[ a, b, a ]-a----c-> : run$
+ * 1>- |ps|---1---------1------------0-1----1-> : pubsub
+ * 3>- ---|tp|------*-*-*----------*---*----*-> : command$
+ * 2>- ---|tp|xf|---^-^------------^-?--------> : task$
+ * 4>- ------|ps|--|a-b-c----------a---a----c-> : pubsub
+ * Handlers
+ * a>- ---------|tp|*--------------*---*------>
+ * b>- ---------|tp|--*----------------------->
+ * c>- ---------|tp|----*-------------------*->
  * ```
  * ## Streams
  * - `0>-`: `ctx.run$.next(x)` userland dispatch stream
@@ -180,19 +180,23 @@ const unknown_key = (c, i, unknown) => {
  * - `reso`: Function | Undefined
  * - `erro`: Function | Undefined
  *
- * `args` key = primary control structure
- * - non-function vals send the Command as-is
- * - `(0)=>` nullary fns send the _args_ as a Command
- * - `(1)=>` unary fns are passed the STATE and called
- * - Promises returned from fns are resolved
- * - new vals are merged with STATE (dupe keys overwrite)
+ * #### Required keys
+ * 1) `sub$1 key = primary identifier
+ *  - used for registering handlers hooked onto the Command stream.
+ * 2) `args` key = primary control structure
+ *  - non-function vals send the Command as-is
+ *  - `(0)=>` nullary fns send the _args_ as a Command
+ *  - `(1)=>` unary fns are passed the STATE and called
+ *  - Promises and those returned from fns are resolved
+ *  - new vals are merged with STATE (dupe keys overwritten)
  *
  * #### Promise-specific keys:
- * if `args` is/returns a Promise, these keys are used:
- * - `reso` key = handle resolved promises (⚠ binary)
- *  - `(2)=>` MUST be a binary `(STATE, resolved Promise) =>`
- * - `erro` key = handle rejected promises (⚠ binary)
- *  - `(2)=>` MUST be binary `(STATE, Promise rejection) =>`
+ * `dispatcher` uses these two keys for Promises:
+ * 3) `reso` key = handle resolved promises (⚠ binary): `(2)=>` MUST be a binary `(STATE, resolved Promise) =>`
+ * 4) `erro` key = handle rejected promises (⚠ binary): `(2)=>` MUST be binary `(STATE, Promise rejection) =>`
+ *
+ * #### State-specific key:
+ * 5) `path` key = lens into the global state [Atom](http://thi.ng/atom) for global state evolution (immutably of course)
  *
  * ## Subtasks:
  * Subtasks are the way you compose tasks. Insert a Task and
