@@ -184,7 +184,7 @@ const unknown_key = (c, i, unknown) => {
  * 1. `sub$` key = primary identifier
  *  - used for registering handlers hooked onto the Command stream.
  *
- * 2. `args` key = primary control structure
+ * 2. `args` key = __primary control structure__
  *  - non-function vals send the Command as-is
  *  - `(0)=>` nullary fns send the _args_ as a Command
  *  - `(1)=>` unary fns are passed the STATE and called
@@ -197,7 +197,9 @@ const unknown_key = (c, i, unknown) => {
  * 4. `erro` key = handle rejected promises (⚠ binary): `(2)=>` MUST be binary `(STATE, Promise rejection) =>`
  *
  * > State-specific key:
- * 5. `path` key = lens into the global state [Atom](http://thi.ng/atom) for global state evolution (immutably of course)
+ * 5. `path` key = lens
+ *  - this is used to cursor into the global state [Atom](http://thi.ng/atom) for global state evolution (immutably of course)
+ *  - you can do anything you want with it. It's allowed to be any form of static data (no functions), but its presence sets dispatcher to trigger a Command.
  *
  * ## Subtasks:
  * Subtasks are the way you compose tasks. Insert a Task and
