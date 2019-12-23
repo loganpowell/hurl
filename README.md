@@ -126,7 +126,7 @@ The pattern matching for this could be as easy as creating one pattern matching 
 
 ### Trade-offs
 1. This design requires more forethought in design of an application as the rendered view is the last step in the process, whereas - in a conventional web app design - you may start "with the end in mind" (i.e., views) and work your way up to the logic
-2. This design is more difficult than an ad-hoc design pipeline and may lend itself less to a conventional design -> implementation workflow (with the respective division of labor between them). I.e., the rendered view needs to be intimately "aware" of the data structure and vice-versa
+2. This design is more difficult than an ad-hoc design pipeline and may lend itself less to a conventional design -> implementation workflow (with the respective division of labor between them). I.e., the rendered view needs to be intimately "aware" of the data structure (not the other way around).
 
 ### Benefits
 1. This is a de-coupled approach to web app architecture; it avails itself as both a purely data-oriented approach (and thus agnostic to whether or not the data is precalculated from remote servers or dynamically accumulated via user-initiated client-side event streams
