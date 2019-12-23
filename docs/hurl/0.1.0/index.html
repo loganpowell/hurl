@@ -215,7 +215,7 @@ history.addListener(&quot;popState&quot;, (a, b, c) => TBD(a, b)(route_match(c))
 <h3>Trade-offs</h3>
 <ol>
 <li>This design requires more forethought in design of an application as the rendered view is the last step in the process, whereas - in a conventional web app design - you may start &quot;with the end in mind&quot; (i.e., views) and work your way up to the logic</li>
-<li>This design is more difficult than an ad-hoc design pipeline and may lend itself less to a conventional design -&gt; implementation workflow (with the respective division of labor between them). I.e., the rendered view needs to be intimately &quot;aware&quot; of the data structure and vice-versa</li>
+<li>This design is more difficult than an ad-hoc design pipeline and may lend itself less to a conventional design -&gt; implementation workflow (with the respective division of labor between them). I.e., the rendered view needs to be intimately &quot;aware&quot; of the data structure (not the other way around).</li>
 </ol>
 <h3>Benefits</h3>
 <ol>
