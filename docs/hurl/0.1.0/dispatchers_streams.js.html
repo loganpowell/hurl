@@ -111,7 +111,7 @@ import {
   isNull,
   isBoolean
 } from "@thi.ng/checks"
-import { map, filter, comp } from "@thi.ng/transducers"
+import { map } from "@thi.ng/transducers"
 import { pubsub, trace } from "@thi.ng/rstream"
 
 // prettier-ignore
@@ -173,7 +173,6 @@ export const type_str = x => {
  * - "state": Global state mutations
  * - "route": Routing
  * - "FLIP" : [F.L.I.P.](https://aerotwist.com/blog/flip-your-animations/) animations
- *
  *
  * 📌 TODO:
  * - add __Examples__
@@ -263,16 +262,19 @@ const unknown_key = (c, i, unknown) => {
 }
 
 /**
- * # `dispatcher`
+ * ### `dispatcher`
+ *
  * Async `reduce` function, that passes an _object_ as a state
  * container between Command invocations.
  *
- * ## TL;DR:
+ * ### TL;DR:
+ *
  * Handles any state updates and/or other effects which
  * require _ordered_ choreography and/or have a dependency
  * on some (a/sync) data produced by a user interaction.
  *
- * ## Synopsis:
+ * ### Synopsis:
+ *
  * - very simple async finite state machine.
  * - Commands are composed in-situ in userland (Ad hoc)
  * - spools a collection of Commands as a Task
@@ -280,12 +282,14 @@ const unknown_key = (c, i, unknown) => {
  * - passes an accumulator (STATE) to subsequent Commands in
  *   a Task
  *
- * ## Type checks on function signatures
+ * ### Type checks on function signatures
+ *
  * There are two valid forms for Task entries:
  * 1. a Unary function: alias/refer to sub Tasks
  * 2. A Command object: dispatch to Command stream
  *
- * ### Recognized Keys
+ * ## Recognized Keys
+ *
  * There are 5 recognized keys for a Command object:
  *
  * > Required keys
@@ -318,6 +322,80 @@ const unknown_key = (c, i, unknown) => {
  *  - you can do anything you want with it. It's allowed to
  *    be any form of static data (no functions), but its
  *    presence sets dispatcher to trigger a Command.
+ *
+ * ### Examples: 📌 TODO
+ *
+ * ## Subtasks:
+ * Subtasks are the way you compose tasks. Insert a Task and
+ * the dispatcher will unpack it in place
+ * (super -> sub order preserved)
+ * A Subtask must be defined as a unary function that
+ * accepts a state object and returns a Task, e.g.:
+ *
+ * ```js
+ * // pseudo:
+ * let someSubtask = state => [{C}, {C}, (S)=>[...], ...]
+ * // { C: Command }
+ * // ( S: STATE ) => [...]: Subtask
+ *
+ * // example:
+ * let subtask1 = state => [
+ *  { sub$: "state"
+ *  , path: ["body"]
+ *  , args: { data: state.data } },
+ *  { sub$: "route"
+ *  , args: { route: { href: state.href } } }
+ * ]
+ *
+ * let task = [
+ *  { sub$: "init", args: { href: "https://my.io/todos" } },
+ *  { sub$: "fetch"
+ *  , args: ({href}) => fetch(href).then(r => r.json())
+ *  , erro: (state, err) => ({ sub$: "cancel", args: err })
+ *  , reso: (state, res) => ({ data: res }) },
+ *  state => subtask1(state), // subtask reference
+ *  { sub$: "FLIP", args: "done" }
+ * ]
+ * ```
+ *
+ * ## Ad-hoc stream injection
+ *
+ * ADVANCED USE ONLY
+ * HURL tries to hide the stream implentation from the user
+ * as much as possible, but allows you to go further down
+ * the rabbit hole if so desired. You may send Commands to a
+ * separate stream of your own creation by using a unary
+ * `(0)=>` function signature as your `args` value
+ * If this is the case, the dispatcher assumes the
+ * `sub$` key references a stream and sends the return value
+ * of the thunk to that stream
+ *
+ * > Note: if you need to pass in state/data to your thunk,
+ * put it in a subtask, where you can access/destructure the
+ * data from the state passed into the subtask function
+ *
+ * ```js
+ * import { stream, trace } from "@thi.ng/rstream"
+ *
+ * let login = stream().subscribe(trace("login ->"))
+ *
+ * let subtask_login = state => [
+ *  { sub$: login // &lt;- ad hoc stream
+ *  , args: { data: state.token } } // &lt;- you can use state
+ * ]
+ *
+ * let task = [
+ *  { sub$: login, args: () => "logging in..." }
+ *  { sub$: "init", args: { href: "https://my.io/auth" } },
+ *  { sub$: "cookie"
+ *  , args: ({href}) => fetch(href).then(r => r.json())
+ *  , erro: (state, err) => ({ sub$: "cancel", args: err })
+ *  , reso: (state, res) => ({ token: res }) },
+ *  state => subtask_login(state),
+ *  { sub$: login, args: () => "log in success" }
+ * ]
+ * ```
+ * ## Caveats:
  *
  **/
 export const dispatcher = task_array =>

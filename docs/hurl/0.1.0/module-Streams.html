@@ -217,7 +217,7 @@ sent to the <code>task$</code> stream.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line94">line 94</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line93">line 93</a>
         </li>
       </ul>
     </dd>
@@ -289,7 +289,7 @@ to alert downstream handlers is a simple lookup of the
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line106">line 106</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line105">line 105</a>
         </li>
       </ul>
     </dd>
@@ -359,7 +359,7 @@ array of Commands (including subtask functions)</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line117">line 117</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line116">line 116</a>
         </li>
       </ul>
     </dd>
@@ -427,7 +427,7 @@ array of Commands (including subtask functions)</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line129">line 129</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line128">line 128</a>
         </li>
       </ul>
     </dd>
@@ -457,14 +457,14 @@ array of Commands (including subtask functions)</p>
 
 
   <div class="description">
-    <h1><code>dispatcher</code></h1>
+    <h3><code>dispatcher</code></h3>
 <p>Async <code>reduce</code> function, that passes an <em>object</em> as a state
 container between Command invocations.</p>
-<h2>TL;DR:</h2>
+<h3>TL;DR:</h3>
 <p>Handles any state updates and/or other effects which
 require <em>ordered</em> choreography and/or have a dependency
 on some (a/sync) data produced by a user interaction.</p>
-<h2>Synopsis:</h2>
+<h3>Synopsis:</h3>
 <ul>
 <li>very simple async finite state machine.</li>
 <li>Commands are composed in-situ in userland (Ad hoc)</li>
@@ -473,13 +473,13 @@ on some (a/sync) data produced by a user interaction.</p>
 <li>passes an accumulator (STATE) to subsequent Commands in
 a Task</li>
 </ul>
-<h2>Type checks on function signatures</h2>
+<h3>Type checks on function signatures</h3>
 <p>There are two valid forms for Task entries:</p>
 <ol>
 <li>a Unary function: alias/refer to sub Tasks</li>
 <li>A Command object: dispatch to Command stream</li>
 </ol>
-<h3>Recognized Keys</h3>
+<h2>Recognized Keys</h2>
 <p>There are 5 recognized keys for a Command object:</p>
 <blockquote>
 <p>Required keys</p>
@@ -530,6 +530,73 @@ a binary fn <code>(STATE, Promise rejection) =&gt;</code></p>
 be any form of static data (no functions), but its
 presence sets dispatcher to trigger a Command.</li>
 </ul>
+<h3>Examples: 📌 TODO</h3>
+<h2>Subtasks:</h2>
+<p>Subtasks are the way you compose tasks. Insert a Task and
+the dispatcher will unpack it in place
+(super -&gt; sub order preserved)
+A Subtask must be defined as a unary function that
+accepts a state object and returns a Task, e.g.:</p>
+<pre class="prettyprint source lang-js"><code>// pseudo:
+let someSubtask = state => [{C}, {C}, (S)=>[...], ...]
+// { C: Command }
+// ( S: STATE ) => [...]: Subtask
+
+// example:
+let subtask1 = state => [
+ { sub$: &quot;state&quot;
+ , path: [&quot;body&quot;]
+ , args: { data: state.data } },
+ { sub$: &quot;route&quot;
+ , args: { route: { href: state.href } } }
+]
+
+let task = [
+ { sub$: &quot;init&quot;, args: { href: &quot;https://my.io/todos&quot; } },
+ { sub$: &quot;fetch&quot;
+ , args: ({href}) => fetch(href).then(r => r.json())
+ , erro: (state, err) => ({ sub$: &quot;cancel&quot;, args: err })
+ , reso: (state, res) => ({ data: res }) },
+ state => subtask1(state), // subtask reference
+ { sub$: &quot;FLIP&quot;, args: &quot;done&quot; }
+]
+</code></pre>
+<h2>Ad-hoc stream injection</h2>
+<p>ADVANCED USE ONLY
+HURL tries to hide the stream implentation from the user
+as much as possible, but allows you to go further down
+the rabbit hole if so desired. You may send Commands to a
+separate stream of your own creation by using a unary
+<code>(0)=&gt;</code> function signature as your <code>args</code> value
+If this is the case, the dispatcher assumes the
+<code>sub$</code> key references a stream and sends the return value
+of the thunk to that stream</p>
+<blockquote>
+<p>Note: if you need to pass in state/data to your thunk,
+put it in a subtask, where you can access/destructure the
+data from the state passed into the subtask function</p>
+</blockquote>
+<pre class="prettyprint source lang-js"><code>import { stream, trace } from &quot;@thi.ng/rstream&quot;
+
+let login = stream().subscribe(trace(&quot;login ->&quot;))
+
+let subtask_login = state => [
+ { sub$: login // &lt;- ad hoc stream
+ , args: { data: state.token } } // &lt;- you can use state
+]
+
+let task = [
+ { sub$: login, args: () => &quot;logging in...&quot; }
+ { sub$: &quot;init&quot;, args: { href: &quot;https://my.io/auth&quot; } },
+ { sub$: &quot;cookie&quot;
+ , args: ({href}) => fetch(href).then(r => r.json())
+ , erro: (state, err) => ({ sub$: &quot;cancel&quot;, args: err })
+ , reso: (state, res) => ({ token: res }) },
+ state => subtask_login(state),
+ { sub$: login, args: () => &quot;log in success&quot; }
+]
+</code></pre>
+<h2>Caveats:</h2>
   </div>
 
 
@@ -566,7 +633,7 @@ presence sets dispatcher to trigger a Command.</li>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line222">line 222</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line300">line 300</a>
         </li>
       </ul>
     </dd>
