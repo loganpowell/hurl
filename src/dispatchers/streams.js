@@ -195,20 +195,30 @@ const unknown_key = (c, i, unknown) => {
  *
  * 2. `args` key = __primary control structure__
  *  - non-function vals send the Command as-is
- *  - `(0)=>` nullary fns send the _args_ as a Command to the `sub$` stream of your choosing (see Ad-hoc Stream Injection below)
+ *  - `(0)=>` nullary fns send the _args_ as a Command to
+ *    the `sub$` stream of your choosing (see Ad-hoc Stream
+ *    Injection below)
  *  - `(1)=>` unary fns are passed the STATE and called
  *  - Promises (and those returned from `(1)=>`) are resolved
  *  - new vals are merged with STATE (dupe keys overwritten)
  *
- * > Promise-specific keys -> binary (as in two parameter, not boolean) functions:
- * 3. `reso` key = handle resolved promises: `(2)=>` MUST be a binary fn `(STATE, resolved Promise) =>`
+ * > Promise-specific keys -> binary (as in two parameter,
+ *   not boolean) functions:
  *
- * 4. `erro` key = handle rejected promises : `(2)=>` MUST be a binary fn `(STATE, Promise rejection) =>`
+ * 3. `reso` key = handle resolved promises: `(2)=>` MUST be
+ *    a binary fn `(STATE, resolved Promise) =>`
+ *
+ * 4. `erro` key = handle rejected promises : `(2)=>` MUST be
+ *    a binary fn `(STATE, Promise rejection) =>`
  *
  * > State-specific key:
  * 5. `path` key = lens
- *  - this is used to cursor into the global state [Atom](http://thi.ng/atom) for global state evolution (immutably of course)
- *  - you can do anything you want with it. It's allowed to be any form of static data (no functions), but its presence sets dispatcher to trigger a Command.
+ *  - this is used to cursor into the global state
+ *    [Atom](http://thi.ng/atom) for global state evolution
+ *    (immutably of course)
+ *  - you can do anything you want with it. It's allowed to
+ *    be any form of static data (no functions), but its
+ *    presence sets dispatcher to trigger a Command.
  *
  * ### Examples: 📌 TODO
  *
