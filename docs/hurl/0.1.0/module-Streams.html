@@ -389,7 +389,7 @@ array of Commands (including subtask functions)</p>
 
 
   <div class="description">
-    <h3><code>trace_stream</code></h3>
+    <h2><code>trace_stream</code></h2>
 <p>simple ad-hoc tracer to log one of the streams emmissions</p>
   </div>
 
@@ -457,7 +457,7 @@ array of Commands (including subtask functions)</p>
 
 
   <div class="description">
-    <h3><code>dispatcher</code></h3>
+    <h2><code>dispatcher</code></h2>
 <p>Async <code>reduce</code> function, that passes an <em>object</em> as a state
 container between Command invocations.</p>
 <h3>TL;DR:</h3>
@@ -531,7 +531,7 @@ be any form of static data (no functions), but its
 presence sets dispatcher to trigger a Command.</li>
 </ul>
 <h3>Examples: 📌 TODO</h3>
-<h2>Subtasks:</h2>
+<h3>Subtasks:</h3>
 <p>Subtasks are the way you compose tasks. Insert a Task and
 the dispatcher will unpack it in place
 (super -&gt; sub order preserved)
@@ -561,7 +561,7 @@ let task = [
  { sub$: &quot;FLIP&quot;, args: &quot;done&quot; }
 ]
 </code></pre>
-<h2>Ad-hoc stream injection</h2>
+<h3>Ad-hoc stream injection</h3>
 <p>ADVANCED USE ONLY
 HURL tries to hide the stream implentation from the user
 as much as possible, but allows you to go further down

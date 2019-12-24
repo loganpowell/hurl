@@ -219,7 +219,7 @@ export const task$ = run$
   .transform(map(todos => dispatcher(todos)))
 
 /**
- * ### `trace_stream`
+ * ## `trace_stream`
  *
  * simple ad-hoc tracer to log one of the streams emmissions
  * @param {string} log_prefix A string that is prepended to
@@ -262,7 +262,7 @@ const unknown_key = (c, i, unknown) => {
 }
 
 /**
- * ### `dispatcher`
+ * ## `dispatcher`
  *
  * Async `reduce` function, that passes an _object_ as a state
  * container between Command invocations.
@@ -325,7 +325,7 @@ const unknown_key = (c, i, unknown) => {
  *
  * ### Examples: 📌 TODO
  *
- * ## Subtasks:
+ * ### Subtasks:
  * Subtasks are the way you compose tasks. Insert a Task and
  * the dispatcher will unpack it in place
  * (super -> sub order preserved)
@@ -358,7 +358,7 @@ const unknown_key = (c, i, unknown) => {
  * ]
  * ```
  *
- * ## Ad-hoc stream injection
+ * ### Ad-hoc stream injection
  *
  * ADVANCED USE ONLY
  * HURL tries to hide the stream implentation from the user
@@ -412,7 +412,7 @@ export const dispatcher = task_array =>
     let result = args
 
     /**
-     * ## Caveats:
+     * ### Caveats:
      *
      * - It's _highly_ recommended to go through the provided
      * event handling system rather than monkey patching in your
@@ -430,33 +430,33 @@ export const dispatcher = task_array =>
      * side-effect canceling handler (e.g., [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
      * [📌 tut](https://www.youtube.com/watch?v=P_mSaky4OtA))
      *
-     * if no sub$ key, just spread into acc (no Command)
      *
      * Arg handlers by type
      *
      */
     if (!sub$) {
+      //if no sub$ key, just spread into acc (no Command)
       return { ...acc, ...args }
     }
-    // if thunk, dispatch to ad-hoc stream, return acc as-is
     if (arg_type === "THUNK") {
       result = args()
       sub$.next(result) // 💃
+      // if thunk, dispatch to ad-hoc stream, return acc as-is
       return acc
     }
-    // if string, send the Command as-is, return acc as-is
     if (arg_type === "STRING" || arg_type === "BOOLEAN") {
+      // if string, send the Command as-is, return acc as-is
       command$.next(c)
       return acc
     }
-    // if function, call it with acc and resolve any promises
     if (arg_type === "FUNCTION") {
       let temp = args(acc)
+      // if function, call it with acc and resolve any promises
       result = isPromise(temp) ? await temp.catch(e => e) : temp
     }
-    // if object, send the Command as-is and spread into acc
     if (arg_type === "OBJECT") {
       command$.next(c)
+      // if object, send the Command as-is and spread into acc
       return { ...acc, ...args }
     }
 
@@ -485,16 +485,6 @@ export const dispatcher = task_array =>
     command$.next({ sub$, args: result })
     return { ...acc, ...result }
   }, Promise.resolve({}))
-
-//
-//    88~\             d8           888
-//  _888__  e88~~8e  _d88__  e88~~\ 888-~88e
-//   888   d888  88b  888   d888    888  888
-//   888   8888__888  888   8888    888  888
-//   888   Y888    ,  888   Y888    888  888
-//   888    "88___/   "88_/  "88__/ 888  888
-//
-// 🔥 https://developer.mozilla.org/en-US/docs/Web/API/AbortController
 </code></pre>
   </article>
 </section>
