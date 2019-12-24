@@ -121,7 +121,7 @@ export const task$ = run$
   .transform(map(todos => dispatcher(todos)))
 
 /**
- * # `trace_stream`
+ * ### `trace_stream`
  *
  * simple ad-hoc tracer to log one of the streams emmissions
  * @param {string} log_prefix A string that is prepended to
@@ -301,11 +301,6 @@ const unknown_key = (c, i, unknown) => {
  * [📌 tut](https://www.youtube.com/watch?v=P_mSaky4OtA))
  *
  */
-
-// {
-//   sub$: "filter",
-//   args: ({ href }) => ({ href: href + "4" })
-// }
 export const dispatcher = task_array =>
   task_array.reduce(async (a, c, i) => {
     const acc = await a
