@@ -289,7 +289,7 @@ to alert downstream handlers is a simple lookup of the
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line108">line 108</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line106">line 106</a>
         </li>
       </ul>
     </dd>
@@ -359,7 +359,7 @@ array of Commands (including subtask functions)</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line119">line 119</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line117">line 117</a>
         </li>
       </ul>
     </dd>
@@ -427,7 +427,7 @@ array of Commands (including subtask functions)</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line131">line 131</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line129">line 129</a>
         </li>
       </ul>
     </dd>
@@ -447,6 +447,144 @@ array of Commands (including subtask functions)</p>
 
           
         
+            
+
+<h4 class="name" id=".dispatcher">
+  <span class="type-signature">(static, constant) </span>dispatcher<span class="type-signature"></span>
+</h4>
+
+
+
+
+  <div class="description">
+    <h1><code>dispatcher</code></h1>
+<p>Async <code>reduce</code> function, that passes an <em>object</em> as a state
+container between Command invocations.</p>
+<h2>TL;DR:</h2>
+<p>Handles any state updates and/or other effects which
+require <em>ordered</em> choreography and/or have a dependency
+on some (a/sync) data produced by a user interaction.</p>
+<h2>Synopsis:</h2>
+<ul>
+<li>very simple async finite state machine.</li>
+<li>Commands are composed in-situ in userland (Ad hoc)</li>
+<li>spools a collection of Commands as a Task</li>
+<li>resolves any promises contained within a Command</li>
+<li>passes an accumulator (STATE) to subsequent Commands in
+a Task</li>
+</ul>
+<h2>Type checks on function signatures</h2>
+<p>There are two valid forms for Task entries:</p>
+<ol>
+<li>a Unary function: alias/refer to sub Tasks</li>
+<li>A Command object: dispatch to Command stream</li>
+</ol>
+<h3>Recognized Keys</h3>
+<p>There are 5 recognized keys for a Command object:</p>
+<blockquote>
+<p>Required keys</p>
+</blockquote>
+<ol>
+<li><code>sub$</code> key = primary identifier</li>
+</ol>
+<ul>
+<li>used for registering handlers hooked onto the Command stream.</li>
+</ul>
+<ol start="2">
+<li><code>args</code> key = <strong>primary control structure</strong></li>
+</ol>
+<ul>
+<li>non-function vals send the Command as-is</li>
+<li><code>(0)=&gt;</code> nullary fns send the <em>args</em> as a Command to
+the <code>sub$</code> stream of your choosing (see Ad-hoc Stream
+Injection below)</li>
+<li><code>(1)=&gt;</code> unary fns are passed the STATE and called</li>
+<li>Promises (and those returned from <code>(1)=&gt;</code>) are resolved</li>
+<li>new vals are merged with STATE (dupe keys overwritten)</li>
+</ul>
+<blockquote>
+<p>Promise-specific keys -&gt; binary (as in two parameter,
+not boolean) functions:</p>
+</blockquote>
+<ol start="3">
+<li>
+<p><code>reso</code> key = handle resolved promises: <code>(2)=&gt;</code> MUST be
+a binary fn <code>(STATE, resolved Promise) =&gt;</code></p>
+</li>
+<li>
+<p><code>erro</code> key = handle rejected promises : <code>(2)=&gt;</code> MUST be
+a binary fn <code>(STATE, Promise rejection) =&gt;</code></p>
+</li>
+</ol>
+<blockquote>
+<p>State-specific key:</p>
+</blockquote>
+<ol start="5">
+<li><code>path</code> key = lens</li>
+</ol>
+<ul>
+<li>this is used to cursor into the global state
+<a href="http://thi.ng/atom">Atom</a> for global state evolution
+(immutably of course)</li>
+<li>you can do anything you want with it. It's allowed to
+be any form of static data (no functions), but its
+presence sets dispatcher to trigger a Command.</li>
+</ul>
+  </div>
+
+
+
+
+<dl class="details">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source">
+      <ul class="dummy">
+        <li>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line222">line 222</a>
+        </li>
+      </ul>
+    </dd>
+  
+
+  
+
+  
+
+  
+</dl>
+
+
+
+
+
+
+          
         
     
 

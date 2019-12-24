@@ -203,8 +203,6 @@ export const run$ = pubsub({ topic: x => x.length === 0, id: "run_stream" })
  * to alert downstream handlers is a simple lookup of the
  * `sub$` key of the command
  *
- *
- *
  */
 export const command$ = run$.subscribeTopic(true)
 
@@ -320,96 +318,6 @@ const unknown_key = (c, i, unknown) => {
  *  - you can do anything you want with it. It's allowed to
  *    be any form of static data (no functions), but its
  *    presence sets dispatcher to trigger a Command.
- *
- * ### Examples: 📌 TODO
- *
- * ## Subtasks:
- * Subtasks are the way you compose tasks. Insert a Task and
- * the dispatcher will unpack it in place
- * (super -> sub order preserved)
- * A Subtask must be defined as a unary function that
- * accepts a state object and returns a Task, e.g.:
- *
- * ```js
- * // pseudo:
- * let someSubtask = state => [{C}, {C}, (S)=>[...], ...]
- * // { C: Command }
- * // ( S: STATE ) => [...]: Subtask
- *
- * // example:
- * let subtask1 = state => [
- *  { sub$: "state"
- *  , path: ["body"]
- *  , args: { data: state.data } },
- *  { sub$: "route"
- *  , args: { route: { href: state.href } } }
- * ]
- *
- * let task = [
- *  { sub$: "init", args: { href: "https://my.io/todos" } },
- *  { sub$: "fetch"
- *  , args: ({href}) => fetch(href).then(r => r.json())
- *  , erro: (state, err) => ({ sub$: "cancel", args: err })
- *  , reso: (state, res) => ({ data: res }) },
- *  state => subtask1(state), // subtask reference
- *  { sub$: "FLIP", args: "done" }
- * ]
- * ```
- *
- * ## Ad-hoc stream injection
- *
- * ADVANCED USE ONLY
- * HURL tries to hide the stream implentation from the user
- * as much as possible, but allows you to go further down
- * the rabbit hole if so desired. You may send Commands to a
- * separate stream of your own creation by using a unary
- * `(0)=>` function signature as your `args` value
- * If this is the case, the dispatcher assumes the
- * `sub$` key references a stream and sends the return value
- * of the thunk to that stream
- *
- * > Note: if you need to pass in state/data to your thunk,
- * put it in a subtask, where you can access/destructure the
- * data from the state passed into the subtask function
- *
- * ```js
- * import { stream, trace } from "@thi.ng/rstream"
- *
- * let login = stream().subscribe(trace("login ->"))
- *
- * let subtask_login = state => [
- *  { sub$: login // &lt;- ad hoc stream
- *  , args: { data: state.token } } // &lt;- you can use state
- * ]
- *
- * let task = [
- *  { sub$: login, args: () => "logging in..." }
- *  { sub$: "init", args: { href: "https://my.io/auth" } },
- *  { sub$: "cookie"
- *  , args: ({href}) => fetch(href).then(r => r.json())
- *  , erro: (state, err) => ({ sub$: "cancel", args: err })
- *  , reso: (state, res) => ({ token: res }) },
- *  state => subtask_login(state),
- *  { sub$: login, args: () => "log in success" }
- * ]
- * ```
- * ## Caveats:
- *
- * - It's _highly_ recommended to go through the provided
- * event handling system rather than monkey patching in your
- * own streams in the above fashion, however it may be useful
- * in some cases (e.g., for injecting a quick in-situ logger
- * within a task as opposed to tracing all command emmissions
- * with `trace_stream`)
- *
- * - The dispatcher preserves execution order of Commands
- * within a Task, but doesn't do anything to prevent
- * Commands sent directly to the Command stream - while the
- * Task is spooling - from being executed during the
- * execution of the Commands in the Task queue. This can
- * actually be useful behavior if you want to enable an, e.g.,
- * side-effect canceling handler (e.g., [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
- * [📌 tut](https://www.youtube.com/watch?v=P_mSaky4OtA))
  *
  **/
 export const dispatcher = task_array =>
