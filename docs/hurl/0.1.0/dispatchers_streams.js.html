@@ -395,23 +395,6 @@ const unknown_key = (c, i, unknown) => {
  *  { sub$: login, args: () => "log in success" }
  * ]
  * ```
- * ## Caveats:
- *
- * - It's _highly_ recommended to go through the provided
- * event handling system rather than monkey patching in your
- * own streams in the above fashion, however it may be useful
- * in some cases (e.g., for injecting a quick in-situ logger
- * within a task as opposed to tracing all command emmissions
- * with `trace_stream`)
- *
- * - The dispatcher preserves execution order of Commands
- * within a Task, but doesn't do anything to prevent
- * Commands sent directly to the Command stream - while the
- * Task is spooling - from being executed during the
- * execution of the Commands in the Task queue. This can
- * actually be useful behavior if you want to enable an, e.g.,
- * side-effect canceling handler (e.g., [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
- * [📌 tut](https://www.youtube.com/watch?v=P_mSaky4OtA))
  *
  **/
 export const dispatcher = task_array =>
@@ -428,8 +411,30 @@ export const dispatcher = task_array =>
     let arg_type = type_str(args)
     let result = args
 
-    // arg handlers by type
-    // if no sub$ key, just spread into acc (no Command)
+    /**
+     * ## Caveats:
+     *
+     * - It's _highly_ recommended to go through the provided
+     * event handling system rather than monkey patching in your
+     * own streams in the above fashion, however it may be useful
+     * in some cases (e.g., for injecting a quick in-situ logger
+     * within a task as opposed to tracing all command emmissions
+     * with `trace_stream`)
+     *
+     * - The dispatcher preserves execution order of Commands
+     * within a Task, but doesn't do anything to prevent
+     * Commands sent directly to the Command stream - while the
+     * Task is spooling - from being executed during the
+     * execution of the Commands in the Task queue. This can
+     * actually be useful behavior if you want to enable an, e.g.,
+     * side-effect canceling handler (e.g., [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
+     * [📌 tut](https://www.youtube.com/watch?v=P_mSaky4OtA))
+     *
+     * if no sub$ key, just spread into acc (no Command)
+     *
+     * Arg handlers by type
+     *
+     */
     if (!sub$) {
       return { ...acc, ...args }
     }
