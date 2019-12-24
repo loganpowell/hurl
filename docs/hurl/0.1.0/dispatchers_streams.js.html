@@ -162,17 +162,21 @@ export const type_str = x => {
  * - `1>-`: `pubsub({ topic: x => x.length === 0 })`
  * - `2>-`: pubsub = `false` ? -> `task$`: Task Dispatcher
  * - `3>-`: pubsub = `true` ? -> `command$`: Commands stream
- * - `4>-`: `pubsub({ topic: x => x.sub$ })`: userland handlers
+ * - `4>-`: `pubsub({ topic: x => x.sub$ })`: userland
+ *   handlers
  *
  * ## Handlers
- * `4>-` this is the stream to which the user (and framework)
- * attaches handlers. Handlers receive events they subscribe
- * to as topics based on a `sub$` key in a Command object.
+ * `4>-` this is the stream to which the user (and
+ * framework) attaches handlers. Handlers receive events
+ * they subscribe to as topics based on a `sub$` key in a
+ * Command object.
  *
  * ### Handlers (framework provided):
  * - "state": Global state mutations
  * - "route": Routing
- * - "FLIP" : [F.L.I.P.](https://aerotwist.com/blog/flip-your-animations/) animations
+ * - "FLIP" :
+ *   [F.L.I.P.](https://aerotwist.com/blog/flip-your-animations/)
+ *   animations
  *
  * 📌 TODO:
  * - add __Examples__
@@ -185,9 +189,9 @@ export const type_str = x => {
  *
  * User-land event dispatch stream
  *
- * This stream is directly exposed to users via `ctx`
- * Any one-off Commands `next`ed into this stream are sent
- * to the `command$` stream. Arrays of Commands (Tasks) are
+ * This stream is directly exposed to users via `ctx` Any
+ * one-off Commands `next`ed into this stream are sent to
+ * the `command$` stream. Arrays of Commands (Tasks) are
  * sent to the `task$` stream.
  *
  */
@@ -196,11 +200,10 @@ export const run$ = pubsub({ topic: x => x.length === 0, id: "run_stream" })
 /**
  * ## `command$`
  *
- * Primary read stream
- * All user-defined handlers are attached to a `pubsub`
- * stemming from this stream. The `topic` function used
- * to alert downstream handlers is a simple lookup of the
- * `sub$` key of the command
+ * Primary read stream All user-defined handlers are
+ * attached to a `pubsub` stemming from this stream. The
+ * `topic` function used to alert downstream handlers is a
+ * simple lookup of the `sub$` key of the command
  *
  */
 export const command$ = run$.subscribeTopic(true)
@@ -223,7 +226,8 @@ export const task$ = run$
  *
  * simple ad-hoc tracer to log one of the streams emmissions
  * @param {string} log_prefix A string that is prepended to
- *                  console.log's of emissions from the stream
+ *                  console.log's of emissions from the
+ *                  stream
  * @param {stream}
  * */
 export const trace_stream = (log_prefix, stream) =>
@@ -264,8 +268,8 @@ const unknown_key = (c, i, unknown) => {
 /**
  * ## `dispatcher`
  *
- * Async `reduce` function, that passes an _object_ as a state
- * container between Command invocations.
+ * Async `reduce` function, that passes an _object_ as a
+ * state container between Command invocations.
  *
  * ### TL;DR:
  *
@@ -294,7 +298,8 @@ const unknown_key = (c, i, unknown) => {
  *
  * > Required keys
  * 1. `sub$` key = primary identifier
- *  - used for registering handlers hooked onto the Command stream.
+ * - used for registering handlers hooked onto the Command
+ *   stream.
  *
  * 2. `args` key = __primary control structure__
  *  - non-function vals send the Command as-is
@@ -302,7 +307,8 @@ const unknown_key = (c, i, unknown) => {
  *    the `sub$` stream of your choosing (see Ad-hoc Stream
  *    Injection below)
  *  - `(1)=>` unary fns are passed the STATE and called
- *  - Promises (and those returned from `(1)=>`) are resolved
+ *  - Promises (and those returned from `(1)=>`) are
+ *    resolved
  *  - new vals are merged with STATE (dupe keys overwritten)
  *
  * > Promise-specific keys -> binary (as in two parameter,
@@ -311,26 +317,26 @@ const unknown_key = (c, i, unknown) => {
  * 3. `reso` key = handle resolved promises: `(2)=>` MUST be
  *    a binary fn `(STATE, resolved Promise) =>`
  *
- * 4. `erro` key = handle rejected promises : `(2)=>` MUST be
- *    a binary fn `(STATE, Promise rejection) =>`
+ * 4. `erro` key = handle rejected promises : `(2)=>` MUST
+ *    be a binary fn `(STATE, Promise rejection) =>`
  *
  * > State-specific key:
  * 5. `path` key = lens
- *  - this is used to cursor into the global state
- *    [Atom](http://thi.ng/atom) for global state evolution
- *    (immutably of course)
- *  - you can do anything you want with it. It's allowed to
- *    be any form of static data (no functions), but its
- *    presence sets dispatcher to trigger a Command.
+ * - this is used to cursor into the global state
+ *   [Atom](http://thi.ng/atom) for global state evolution
+ *   (immutably of course)
+ * - you can do anything you want with it. It's allowed to
+ *   be any form of static data (no functions), but its
+ *   presence sets dispatcher to trigger a Command.
  *
  * ### Examples: 📌 TODO
  *
  * ### Subtasks:
  * Subtasks are the way you compose tasks. Insert a Task and
- * the dispatcher will unpack it in place
- * (super -> sub order preserved)
- * A Subtask must be defined as a unary function that
- * accepts a state object and returns a Task, e.g.:
+ * the dispatcher will unpack it in place (super -> sub
+ * order preserved) A Subtask must be defined as a unary
+ * function that accepts a state object and returns a Task,
+ * e.g.:
  *
  * ```js
  * // pseudo:
@@ -340,6 +346,7 @@ const unknown_key = (c, i, unknown) => {
  *
  * // example:
  * let subtask1 = state => [
+ *  { args: state }, // no sub$ key = state continuation 👀
  *  { sub$: "state"
  *  , path: ["body"]
  *  , args: { data: state.data } },
@@ -348,27 +355,28 @@ const unknown_key = (c, i, unknown) => {
  * ]
  *
  * let task = [
- *  { sub$: "init", args: { href: "https://my.io/todos" } },
+ *  { sub$: "init"
+ *  , args: { href: "https://my.io/todos" } },
  *  { sub$: "fetch"
  *  , args: ({href}) => fetch(href).then(r => r.json())
  *  , erro: (state, err) => ({ sub$: "cancel", args: err })
  *  , reso: (state, res) => ({ data: res }) },
  *  state => subtask1(state), // subtask reference
- *  { sub$: "FLIP", args: "done" }
+ *  { sub$: "FLIP"
+ *  , args: "done" }
  * ]
  * ```
  *
  * ### Ad-hoc stream injection
  *
- * ADVANCED USE ONLY
- * HURL tries to hide the stream implentation from the user
- * as much as possible, but allows you to go further down
- * the rabbit hole if so desired. You may send Commands to a
- * separate stream of your own creation by using a unary
- * `(0)=>` function signature as your `args` value
- * If this is the case, the dispatcher assumes the
- * `sub$` key references a stream and sends the return value
- * of the thunk to that stream
+ * ADVANCED USE ONLY HURL tries to hide the stream
+ * implentation from the user as much as possible, but
+ * allows you to go further down the rabbit hole if so
+ * desired. You may send Commands to a separate stream of
+ * your own creation by using a unary `(0)=>` function
+ * signature as your `args` value If this is the case, the
+ * dispatcher assumes the `sub$` key references a stream and
+ * sends the return value of the thunk to that stream
  *
  * > Note: if you need to pass in state/data to your thunk,
  * put it in a subtask, where you can access/destructure the
@@ -380,19 +388,23 @@ const unknown_key = (c, i, unknown) => {
  * let login = stream().subscribe(trace("login ->"))
  *
  * let subtask_login = state => [
+ *  { args: state },
  *  { sub$: login // &lt;- ad hoc stream
  *  , args: { data: state.token } } // &lt;- you can use state
  * ]
  *
  * let task = [
- *  { sub$: login, args: () => "logging in..." }
- *  { sub$: "init", args: { href: "https://my.io/auth" } },
+ *  { sub$: login
+ *  , args: () => "logging in..." },
+ *  { sub$: "init"
+ *  , args: { href: "https://my.io/auth" } },
  *  { sub$: "cookie"
  *  , args: ({href}) => fetch(href).then(r => r.json())
  *  , erro: (state, err) => ({ sub$: "cancel", args: err })
  *  , reso: (state, res) => ({ token: res }) },
  *  state => subtask_login(state),
- *  { sub$: login, args: () => "log in success" }
+ *  { sub$: login
+ *  , args: () => "log in success" }
  * ]
  * ```
  *
@@ -414,21 +426,25 @@ export const dispatcher = task_array =>
     /**
      * ### Caveats:
      *
-     * - It's _highly_ recommended to go through the provided
-     * event handling system rather than monkey patching in your
-     * own streams in the above fashion, however it may be useful
-     * in some cases (e.g., for injecting a quick in-situ logger
-     * within a task as opposed to tracing all command emmissions
-     * with `trace_stream`)
+     * - It's _highly_ recommended to go through the
+     *   provided event handling system rather than monkey
+     *   patching in your own streams in the above fashion,
+     *   however it may be useful in some cases (e.g., for
+     *   injecting a quick in-situ logger within a task as
+     *   opposed to tracing all command emmissions with
+     *   `trace_stream`)
      *
-     * - The dispatcher preserves execution order of Commands
-     * within a Task, but doesn't do anything to prevent
-     * Commands sent directly to the Command stream - while the
-     * Task is spooling - from being executed during the
-     * execution of the Commands in the Task queue. This can
-     * actually be useful behavior if you want to enable an, e.g.,
-     * side-effect canceling handler (e.g., [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
-     * [📌 tut](https://www.youtube.com/watch?v=P_mSaky4OtA))
+     * - The dispatcher preserves execution order of
+     *   Commands within a Task, but doesn't do anything to
+     *   prevent Commands sent directly to the Command
+     *   stream - while the Task is spooling - from being
+     *   executed during the execution of the Commands in
+     *   the Task queue. This can actually be useful
+     *   behavior if you want to enable an, e.g.,
+     *   side-effect canceling handler (e.g.,
+     *   [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
+     *   [📌
+     *   tut](https://www.youtube.com/watch?v=P_mSaky4OtA))
      *
      *
      * Arg handlers by type
