@@ -358,7 +358,7 @@ const unknown_key = (c, i, unknown) => {
  *
  * ## Ad-hoc stream injection
  *
- * ⚠ Advanced Users ONLY
+ * ADVANCED USE ONLY
  * HURL tries to hide the stream implentation from the user
  * as much as possible, but allows you to go further down
  * the rabbit hole if so desired. You may send Commands to a
@@ -395,7 +395,7 @@ const unknown_key = (c, i, unknown) => {
  * ```
  * ## Caveats:
  *
- * - It's highly preferable to go through the provided
+ * - It's _highly_ recommended to go through the provided
  * event handling system rather than monkey patching in your
  * own streams in the above fashion, however it may be useful
  * in some cases (e.g., for injecting a quick in-situ logger
@@ -411,7 +411,7 @@ const unknown_key = (c, i, unknown) => {
  * side-effect canceling handler (e.g., [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
  * [📌 tut](https://www.youtube.com/watch?v=P_mSaky4OtA))
  *
- */
+ **/
 export const dispatcher = task_array =>
   task_array.reduce(async (a, c, i) => {
     const acc = await a
