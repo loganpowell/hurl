@@ -1,6 +1,7 @@
 import fetch from "node-fetch"
 
 import { dispatcher, trace_stream, command$ } from "../../src/"
+import { stream, trace } from "@thi.ng/rstream"
 
 //
 //    d8                      d8
@@ -12,14 +13,24 @@ import { dispatcher, trace_stream, command$ } from "../../src/"
 //
 //
 
+let test_stream$ = stream().subscribe(trace("WHY? ->"))
+
 let testicular = [
   {
-    sub$: "init", // sets initial state of FSM
+    sub$: "butt",
+    args: "monkey"
+  },
+  {
+    sub$: "init",
     args: { href: "https://jsonplaceholder.typicode.com/users/" }
   },
   {
-    sub$: "filter", // another way to handle noops -> only emit if passes predicate
+    sub$: "filter",
     args: ({ href }) => ({ href: href + "1" })
+  },
+  {
+    sub$: "butt",
+    args: "money"
   },
   {
     // if the xf returns a promise, it is resolved before passing
@@ -34,13 +45,20 @@ let testicular = [
     erro: (state, err) => ({ sub$: "cancel", args: err })
   },
   {
-    sub$: "thunk",
-    args: () => ({ sub$: "something", args: "something else" })
+    sub$: "filter",
+    args: ({ href }) => ({ href: href.slice(0, -1) + "4" })
   },
-  state => route(state)
+  state => route(state),
+  {
+    sub$: "filter",
+    args: ({ href }) => ({ href: href.slice(0, -1) + "6" })
+  }
 ]
 // Lower Order Trigger (on triggers.next("route") )
 let route = state => [
+  {
+    args: state
+  },
   {
     sub$: "FLIP",
     // options (1): https://github.com/davidkpiano/flipping#new-flippingoptions
@@ -48,20 +66,21 @@ let route = state => [
     args: "start"
   },
   {
+    sub$: test_stream$,
+    args: () => ({ sub$: "x", args: "SOMTHING ELSE" })
+  },
+  {
     sub$: "state",
-    path: ["head"],
-    // 📌 have to create a function that generates/overwrites these defaults...
-    args: ({ href }) => ({
+    path: ["header"],
+    args: {
       meta: {
-        // title: `Hyperlocals ${search && "Search Results for: " + search}`,
-        "og:description": "social media for people who hate social media",
+        "og:description": "social media antisocial people",
         "og:type": "website",
-        "og:url": href,
-        // "og:image": pic,
-        "og:image:width": 1200,
+        "og:url": state.href,
+        "og:image:width": 1000,
         "og:image:height": 1200
       }
-    })
+    }
   },
   {
     sub$: "state",
@@ -70,21 +89,21 @@ let route = state => [
   },
   {
     sub$: "state",
-    path: ["body", "loading"],
+    path: ["just", "🍑y"],
     args: false
   },
   {
     sub$: "state",
     path: ["route"],
-    args: { state: "parse_URL(href)" }
+    args: { route: "parse_URL()" }
   },
   {
     sub$: "pushstate",
-    args: { state: "route state overwritten 🔥" }
+    args: { route: "route overwritten  🔥" }
   },
   {
     sub$: "FLIP",
-    args: "end"
+    args: "done"
   }
 ]
 
@@ -97,6 +116,6 @@ let route = state => [
 //  \_88P   "88_/  "88_-888 888     "88_/
 //
 //
-trace_stream("commands->", command$)
+trace_stream("comm ->", command$)
 
 dispatcher(testicular) //?

@@ -84,7 +84,7 @@
       
     
 
-    <h3>Modules</h3><ul><li id="Streams-nav"><a href="module-Streams.html">Streams</a></li></ul><h3 id="global-nav">Global</h3><ul><li><a href="global.html#trace_stream">trace_stream</a></li><li><a href="global.html#prefetch_link">prefetch_link</a></li><li><a href="global.html#hurl_dispatch">hurl_dispatch</a></li><li><a href="global.html#hurl_router">hurl_router</a></li><li><a href="global.html#register_router_BOM">register_router_BOM</a></li><li><a href="global.html#parse_href">parse_href</a></li></ul>
+    <h3>Modules</h3><ul><li id="Streams-nav"><a href="module-Streams.html">Streams</a></li></ul><h3 id="global-nav">Global</h3><ul><li><a href="global.html#prefetch_link">prefetch_link</a></li><li><a href="global.html#hurl_dispatch">hurl_dispatch</a></li><li><a href="global.html#hurl_router">hurl_router</a></li><li><a href="global.html#register_router_BOM">register_router_BOM</a></li><li><a href="global.html#parse_href">parse_href</a></li></ul>
   </nav>
 
   <div id="main">
@@ -99,8 +99,7 @@
 
 <section>
   <article>
-    <pre class="prettyprint source linenums"><code>import { trace } from "@thi.ng/rstream"
-import { run$, task$, command$ } from "./dispatchers"
+    <pre class="prettyprint source linenums"><code>import { run$, task$, command$ } from "./dispatchers"
 
 /**
  * Registers event handler for given `id`, incl. optional validation
@@ -108,30 +107,40 @@ import { run$, task$, command$ } from "./dispatchers"
  * The handler's subscription also includes an error handler to display
  * errors in the console.
  *
- * @param id
- * @param handler
- * @param xform
- */
-export const defHandler = (id, handler, xform) => {
-  const sub = {
-    next: handler,
-    error: console.warn
-  }
-  return xform
-    ? command$.subscribeTopic(id, {}, {}).subscribe(sub, xform)
-    : command$.subscribeTopic(id, sub)
-}
-
-/**
- * # `trace_stream`
+ * @param command a Command object
+ * @param handler a function that is triggered w/the command
+ * @param xform optional transducer to alter stream emmissions
+ *              before invoking the handler
  *
- * simple ad-hoc tracer to log one of the streams emmissions
- * @param {string} log_prefix A string that is prepended to
- *                  console.log's of emissions from the stream
- * @param {stream}
- * */
-export const trace_stream = (log_prefix, stream) =>
-  stream.subscribe(trace(log_prefix))
+ * @example
+ * // naming convention for functions with prerequisites
+ * // or dependencies from upstream commands in a task
+ * // upstreamStateDependency_handlerName (separated with
+ * // underscore)
+ * import { filter } from "@thi.ng/transducer"
+ *
+ * const href_meta = defHandler(
+ *   {
+ *     sub$: "meta",
+ *     // notice state.href dependency
+ *     args: state => fetch(state.href).then(r => r.json()),
+ *     ...
+ *   },
+ *   ({ args }) => parseMetaAndInjectHead(args),
+ *   filter(x => !!x.args.data)
+ * )
+ */
+export const defHandler = (command, handler, xform) => {
+  const { sub$ } = command
+  const sub = {
+    next: handler, // Fn
+    error: console.warn // Fn
+    //done: Fn0
+  }
+  if (xform) command$.subscribeTopic(sub$, {}, {}).subscribe(sub, xform)
+  else command$.subscribeTopic(sub$, sub)
+  return command // this is your constant/alias
+}
 
 /**
  * PSEUDO:

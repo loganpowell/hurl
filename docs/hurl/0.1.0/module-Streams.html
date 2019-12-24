@@ -82,7 +82,7 @@
       
     
 
-    <h3>Modules</h3><ul><li id="Streams-nav"><a href="module-Streams.html">Streams</a></li></ul><h3 id="global-nav">Global</h3><ul><li><a href="global.html#trace_stream">trace_stream</a></li><li><a href="global.html#prefetch_link">prefetch_link</a></li><li><a href="global.html#hurl_dispatch">hurl_dispatch</a></li><li><a href="global.html#hurl_router">hurl_router</a></li><li><a href="global.html#register_router_BOM">register_router_BOM</a></li><li><a href="global.html#parse_href">parse_href</a></li></ul>
+    <h3>Modules</h3><ul><li id="Streams-nav"><a href="module-Streams.html">Streams</a></li></ul><h3 id="global-nav">Global</h3><ul><li><a href="global.html#prefetch_link">prefetch_link</a></li><li><a href="global.html#hurl_dispatch">hurl_dispatch</a></li><li><a href="global.html#hurl_router">hurl_router</a></li><li><a href="global.html#register_router_BOM">register_router_BOM</a></li><li><a href="global.html#parse_href">parse_href</a></li></ul>
   </nav>
 
   <div id="main">
@@ -155,7 +155,7 @@ c>- ---------|tp|----*-------------------*->
 <li><code>1&gt;-</code>: <code>pubsub({ topic: x =&gt; x.length === 0 })</code></li>
 <li><code>2&gt;-</code>: pubsub = <code>false</code> ? -&gt; <code>task$</code>: Task Dispatcher</li>
 <li><code>3&gt;-</code>: pubsub = <code>true</code> ? -&gt; <code>command$</code>: Commands stream</li>
-<li><code>4&gt;-</code>: <code>pubsub({ topic: x =&gt; x.sub$ })</code></li>
+<li><code>4&gt;-</code>: <code>pubsub({ topic: x =&gt; x.sub$ })</code>: userland handlers</li>
 </ul>
 <h2>Handlers</h2>
 <p><code>4&gt;-</code> this is the stream to which the user (and framework)
@@ -169,6 +169,7 @@ to as topics based on a <code>sub$</code> key in a Command object.</p>
 </ul>
 <p>📌 TODO:</p>
 <ul>
+<li>add <strong>Examples</strong></li>
 <li>add <code>beforeunload</code> event handler within #4 (orphan):
 SEE https://youtu.be/QQukWZcIptM</li>
 <li>enable ctx.run.cancel() via external or internal events
@@ -216,7 +217,7 @@ sent to the <code>task$</code> stream.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line91">line 91</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line94">line 94</a>
         </li>
       </ul>
     </dd>
@@ -288,7 +289,7 @@ to alert downstream handlers is a simple lookup of the
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line105">line 105</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line108">line 108</a>
         </li>
       </ul>
     </dd>
@@ -358,7 +359,7 @@ array of Commands (including subtask functions)</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line116">line 116</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line119">line 119</a>
         </li>
       </ul>
     </dd>
@@ -380,102 +381,16 @@ array of Commands (including subtask functions)</p>
         
             
 
-<h4 class="name" id=".dispatcher">
-  <span class="type-signature">(static, constant) </span>dispatcher<span class="type-signature"></span>
+<h4 class="name" id=".trace_stream">
+  <span class="type-signature">(static, constant) </span>trace_stream<span class="type-signature"></span>
 </h4>
 
 
 
 
   <div class="description">
-    <h1><code>dispatcher</code></h1>
-<p>Async <code>reduce</code> function, that passes an <em>object</em> as a state
-container between Command invocations.</p>
-<h2>TL;DR:</h2>
-<p>Handles any state updates and/or other effects which
-require <em>ordered</em> choreography and/or have a dependency
-on some (a/sync) data produced by a user interaction.</p>
-<h2>Synopsis:</h2>
-<ul>
-<li>very simple async finite state machine.</li>
-<li>Commands are composed in-situ in userland (Ad hoc)</li>
-<li>spools a collection of Commands as a Task</li>
-<li>resolves any promises contained within a Command</li>
-<li>passes an accumulator (STATE) to subsequent Commands in
-a Task</li>
-</ul>
-<h2>Type checks on function signatures</h2>
-<p>There are two valid forms for Task entries:</p>
-<ol>
-<li>a Unary function: alias/refer to sub Tasks</li>
-<li>A Command object: dispatch to Command stream</li>
-</ol>
-<h3>Recognized Keys</h3>
-<p>There are 5 recognized keys for a Command object:</p>
-<ul>
-<li><code>sub$</code>: String</li>
-<li><code>args</code>: Any 🧐</li>
-<li><code>path</code>: Array | String | Undefined</li>
-<li><code>reso</code>: Function | Undefined</li>
-<li><code>erro</code>: Function | Undefined</li>
-</ul>
-<blockquote>
-<p>Required keys</p>
-</blockquote>
-<ol>
-<li><code>sub$</code> key = primary identifier</li>
-</ol>
-<ul>
-<li>used for registering handlers hooked onto the Command stream.</li>
-</ul>
-<ol start="2">
-<li><code>args</code> key = <strong>primary control structure</strong></li>
-</ol>
-<ul>
-<li>non-function vals send the Command as-is</li>
-<li><code>(0)=&gt;</code> nullary fns send the <em>args</em> as a Command</li>
-<li><code>(1)=&gt;</code> unary fns are passed the STATE and called</li>
-<li>Promises and those returned from fns are resolved</li>
-<li>new vals are merged with STATE (dupe keys overwritten)</li>
-</ul>
-<blockquote>
-<p>Promise-specific keys -&gt; <code>dispatcher</code> uses these two keys for Promises:</p>
-</blockquote>
-<ol start="3">
-<li>
-<p><code>reso</code> key = handle resolved promises (⚠ binary): <code>(2)=&gt;</code> MUST be a binary <code>(STATE, resolved Promise) =&gt;</code></p>
-</li>
-<li>
-<p><code>erro</code> key = handle rejected promises (⚠ binary): <code>(2)=&gt;</code> MUST be binary <code>(STATE, Promise rejection) =&gt;</code></p>
-</li>
-</ol>
-<blockquote>
-<p>State-specific key:</p>
-</blockquote>
-<ol start="5">
-<li><code>path</code> key = lens</li>
-</ol>
-<ul>
-<li>this is used to cursor into the global state <a href="http://thi.ng/atom">Atom</a> for global state evolution (immutably of course)</li>
-<li>you can do anything you want with it. It's allowed to be any form of static data (no functions), but its presence sets dispatcher to trigger a Command.</li>
-</ul>
-<h2>Subtasks:</h2>
-<p>Subtasks are the way you compose tasks. Insert a Task and
-the dispatcher will unpack it in place
-(super -&gt; sub order preserved)
-A Subtask must be defined as a unary function that
-accepts a state object and returns a Task, e.g.:</p>
-<pre class="prettyprint source lang-js"><code>// pseudo:
-let someSubtask = state => [{C}, {C}, (S)=>[...], ...]
-// { C: Command }
-// ( S: STATE ) => [...]: Subtask
-</code></pre>
-<h2>Caveat:</h2>
-<p>The dispatcher preserves execution order of Commands
-within a Task, but doesn't do anything to prevent
-Commands sent directly to the Command stream - while the
-Task is spooling - from being executed during the
-execution of the Commands in the Task queue.</p>
+    <h1><code>trace_stream</code></h1>
+<p>simple ad-hoc tracer to log one of the streams emmissions</p>
   </div>
 
 
@@ -512,7 +427,7 @@ execution of the Commands in the Task queue.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line228">line 228</a>
+          <a href="dispatchers_streams.js.html">dispatchers/streams.js</a>, <a href="dispatchers_streams.js.html#line131">line 131</a>
         </li>
       </ul>
     </dd>
@@ -531,6 +446,7 @@ execution of the Commands in the Task queue.</p>
 
 
           
+        
         
     
 
