@@ -33,14 +33,16 @@ let testicular = [
     args: "money"
   },
   {
-    // if the xf returns a promise, it is resolved before passing
+    // if the xf returns a promise, it is resolved before
+    // passing
     sub$: "fetch",
     args: ({ href }) => fetch(href).then(r => r.json()),
     // splitting behavior
     // dispatch to next (invoker .next triggers)
     reso: (state, res) => ({ data: res }),
-    // dispatched to alternative stream (invoker .next errors) and triggers.cancel()
-    // also consider just `throw`ing:
+    // dispatched to alternative stream (invoker .next
+    // errors) and triggers.cancel() also consider just
+    // `throw`ing:
     // https://github.com/thi-ng/umbrella/tree/master/packages/rstream#conceptual-differences-to-rxjs
     erro: (state, err) => ({ sub$: "cancel", args: err })
   },
@@ -61,8 +63,10 @@ let route = state => [
   },
   {
     sub$: "FLIP",
-    // options (1): https://github.com/davidkpiano/flipping#new-flippingoptions
-    // options (2): https://github.com/aholachek/react-flip-toolkit/tree/7382f9380200f5a85296621db852ea2513cc5eec/packages/flip-toolkit
+    // options (1):
+    // https://github.com/davidkpiano/flipping#new-flippingoptions
+    // options (2):
+    // https://github.com/aholachek/react-flip-toolkit/tree/7382f9380200f5a85296621db852ea2513cc5eec/packages/flip-toolkit
     args: "start"
   },
   {
